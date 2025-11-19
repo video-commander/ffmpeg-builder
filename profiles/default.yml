@@ -8,7 +8,7 @@ ffmpeg:
   ld_static: true
 codecs:
   x264: true
-  x265: false
+  x265: true
   aom:  false
   svtav1: false
   vpx:  false
