@@ -36,7 +36,7 @@ cd "$SRC/x265/build"
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DENABLE_SHARED=OFF \
-  -DENABLE_CLI=OFF \
+  -DENABLE_CLI=ON \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   ../source
 
