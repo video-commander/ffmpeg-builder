@@ -1,0 +1,17 @@
+name: minimal-open
+ffmpeg:
+  version: 7.1
+  enable_ffplay: false
+  gpl: true
+  nonfree: false
+  ld_static: true
+codecs:
+  x264: false
+  x265: false
+  aom:  true
+  svtav1: true
+  vpx:  false
+  opus: true
+  fdk_aac: false
+system:
+  parallel: 4

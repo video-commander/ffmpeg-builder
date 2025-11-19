@@ -1,0 +1,21 @@
+name: default
+ffmpeg:
+  version: 7.1
+  enable_ffplay: false
+  extra_flags: []
+  gpl: true
+  nonfree: false
+  ld_static: true
+codecs:
+  x264: true
+  x265: true
+  aom:  true
+  svtav1: false
+  vpx:  true
+  opus: true
+  fdk_aac: false
+system:
+  macos_deployment_target: "11.0"
+  linux_triplet: x86_64-linux-gnu
+  windows_triplet: x86_64-w64-mingw32
+  parallel: 4
