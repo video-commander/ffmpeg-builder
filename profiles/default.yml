@@ -8,11 +8,11 @@ ffmpeg:
   ld_static: true
 codecs:
   x264: true
-  x265: true
-  aom:  true
+  x265: false
+  aom:  false
   svtav1: false
-  vpx:  true
-  opus: true
+  vpx:  false
+  opus: false
   fdk_aac: false
 system:
   macos_deployment_target: "11.0"
