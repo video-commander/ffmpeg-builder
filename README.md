@@ -67,9 +67,9 @@ profiles/
 ## Selecting a profile
 
 ```bash
-PROFILE=build-profiles/default.yml ./scripts/build-ffmpeg.sh
-PROFILE=build-profiles/minimal.yml ./scripts/build-ffmpeg.sh
-PROFILE=build-profiles/full.yml    ./scripts/build-ffmpeg.sh
+PROFILE=profiles/default.yml ./scripts/build-ffmpeg.sh
+PROFILE=profiles/minimal.yml ./scripts/build-ffmpeg.sh
+PROFILE=profiles/full.yml    ./scripts/build-ffmpeg.sh
 ```
 
 If no profile is provided, `default.yml` is used.
