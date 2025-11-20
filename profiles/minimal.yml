@@ -1,0 +1,30 @@
+name: minimal
+
+ffmpeg:
+  version: 7.1
+  enable_ffplay: false
+  gpl: true
+  nonfree: false
+  ld_static: true
+
+codecs:
+  x264:   true
+  x265:   false
+  aom:    false
+  svtav1: false
+  vpx:    false
+  opus:   true
+  fdk_aac: false
+  ass:    false
+  vmaf:   false
+  srt:    false
+
+system:
+  parallel: 4
+
+ports:
+  x264:
+    # x264 is usually “stable” via git; your port script can map this
+    version: "stable"
+  opus:
+    version: "v1.5.1"

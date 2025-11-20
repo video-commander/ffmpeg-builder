@@ -5,88 +5,126 @@ SRC="$1"
 PREFIX="$2"
 PAR="$3"
 
-SRC_DIR="$SRC/x265"
+# Version comes from env/profile, default 3.6
+X265_VERSION="${PORT_X265_VERSION:-3.6}"
+
+TARBALL="x265_${X265_VERSION}.tar.gz"
+URL="https://bitbucket.org/multicoreware/x265_git/downloads/${TARBALL}"
+
+echo ">>> x265 ${X265_VERSION}: prefix=$PREFIX"
+echo ">>> x265: download URL: $URL"
+
+mkdir -p "$SRC"
+
+# ---------------------------------------------------------------------
+# Download and extract release tarball from Bitbucket
+# ---------------------------------------------------------------------
+if [[ ! -f "$SRC/$TARBALL" ]]; then
+  echo ">>> downloading $TARBALL"
+  curl -L "$URL" -o "$SRC/$TARBALL"
+fi
+
+# Extract once
+if ! tar -tf "$SRC/$TARBALL" >/dev/null 2>&1; then
+  echo "ERROR: $TARBALL is not a valid tar archive (size: $(stat -f%z "$SRC/$TARBALL" 2>/dev/null || stat -c%s "$SRC/$TARBALL"))" >&2
+  exit 1
+fi
+
+# Only extract if we don't already have a source dir
+if [[ ! -d "$SRC/x265_${X265_VERSION}" && ! -d "$SRC/x265-${X265_VERSION}" ]]; then
+  echo ">>> extracting $TARBALL"
+  tar -xf "$SRC/$TARBALL" -C "$SRC"
+fi
+
+# Handle both possible directory names
+if   [[ -d "$SRC/x265_${X265_VERSION}" ]]; then
+  SRC_DIR="$SRC/x265_${X265_VERSION}"
+elif [[ -d "$SRC/x265-${X265_VERSION}" ]]; then
+  SRC_DIR="$SRC/x265-${X265_VERSION}"
+else
+  echo "ERROR: x265 source directory not found after extracting $TARBALL" >&2
+  exit 1
+fi
+
 BUILD_DIR="$SRC_DIR/build"
 
-echo ">>> Building x265 into $PREFIX"
-
-# Clone x265 if needed
-if [[ ! -d "$SRC_DIR" ]]; then
-  git clone --depth=1 https://github.com/videolan/x265.git "$SRC_DIR"
-fi
+echo ">>> x265: using source dir: $SRC_DIR"
 
 CML="$SRC_DIR/source/CMakeLists.txt"
 
 # ---------------------------------------------------------------------
-# Patch for modern CMake (macOS runner uses newer CMake versions)
+# Patch CMakeLists for modern CMake (remove OLD policies once)
 # ---------------------------------------------------------------------
-if [[ -f "$CML" ]]; then
-  if ! grep -q "VC_PATCHED_FOR_MODERN_CMAKE" "$CML"; then
-    echo "[patch] Fixing x265 CMakeLists for modern CMake..."
-    cp "$CML" "$CML.bak"
+if [[ -f "$CML" ]] && ! grep -q "VC_PATCHED_FOR_MODERN_CMAKE" "$CML"; then
+  echo ">>> patching x265 CMakeLists for modern CMake"
+  cp "$CML" "$CML.bak"
 
-    {
-      echo ""
-      echo "# VC_PATCHED_FOR_MODERN_CMAKE"
-      echo "# Remove old cmake_policy settings that break new CMake"
-    } >> "$CML"
+  {
+    echo ""
+    echo "# VC_PATCHED_FOR_MODERN_CMAKE"
+  } >> "$CML"
 
-    # macOS sed requires ''
+  # BSD/macOS vs GNU sed
+  if [[ "$(uname -s)" == "Darwin" ]]; then
     sed -i '' \
       -e 's/cmake_policy(SET CMP0025 OLD)//g' \
       -e 's/cmake_policy(SET CMP0054 OLD)//g' \
       "$CML"
+  else
+    sed -i \
+      -e 's/cmake_policy(SET CMP0025 OLD)//g' \
+      -e 's/cmake_policy(SET CMP0054 OLD)//g' \
+      "$CML"
   fi
-else
-  echo "ERROR: x265 CMakeLists.txt missing: $CML" >&2
-  exit 1
 fi
 
 # ---------------------------------------------------------------------
-# Build directory
+# Configure & build (CLI enabled so install rules run)
 # ---------------------------------------------------------------------
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-echo ">>> Configuring x265 with CMake..."
+# Extra flags for problematic platforms
+EXTRA_X265_FLAGS=()
+
+# On macOS arm64, disable ASM/NEON to avoid unresolved NEON symbols
+if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
+  echo ">>> x265: disabling assembly on macOS arm64 (NEON primitives cause link issues)"
+  EXTRA_X265_FLAGS+=(
+    -DENABLE_ASSEMBLY=OFF
+    -DENABLE_NEON=OFF
+  )
+fi
 
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DENABLE_SHARED=OFF \
-  -DENABLE_CLI=OFF \
+  -DENABLE_CLI=ON \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  "${EXTRA_X265_FLAGS[@]}" \
   ../source
 
-echo ">>> Building x265..."
 ninja -j"$PAR"
-
-echo ">>> Installing x265..."
 ninja install
 
+# Remove CLI – we only want the library in the toolchain
+rm -f "$PREFIX/bin/x265" || true
+
+# ---------------------------------------------------------------------
+# Generate deterministic pkg-config with real version
+# ---------------------------------------------------------------------
 PC_DIR="$PREFIX/lib/pkgconfig"
 PC_FILE="$PC_DIR/x265.pc"
 
 mkdir -p "$PC_DIR"
 
-if [[ ! -f "$PC_FILE" ]]; then
-  echo "[info] No x265.pc installed by upstream — generating it"
+case "$(uname -s)" in
+  Darwin*) CXX_LIB="-lc++" ;;
+  *)       CXX_LIB="-lstdc++" ;;
+esac
 
-  X265_VERSION="0"
-  if [[ -f "$PREFIX/include/x265.h" ]]; then
-    v=$(grep -E 'X265_BUILD|X265_VERSION' "$PREFIX/include/x265.h" | head -n1 || true)
-    if [[ -n "$v" ]]; then
-      X265_VERSION=$(echo "$v" | tr -cd '0-9.')
-      [[ -z "$X265_VERSION" ]] && X265_VERSION="0"
-    fi
-  fi
-
-  # Choose appropriate C++ runtime lib
-  case "$(uname -s)" in
-    Darwin*) CXX_LIB="-lc++" ;;
-    *)       CXX_LIB="-lstdc++" ;;
-  esac
-
-  cat > "$PC_FILE" <<PC
+cat > "$PC_FILE" <<PC
 prefix=$PREFIX
 exec_prefix=\${prefix}
 libdir=\${exec_prefix}/lib
@@ -94,12 +132,10 @@ includedir=\${prefix}/include
 
 Name: x265
 Description: H.265/HEVC video encoder
-Version: $X265_VERSION
-Libs: -L\${libdir} -lx265 -lm -lpthread $CXX_LIB
+Version: ${X265_VERSION}
+Libs: -L\${libdir} -lx265 -lm -lpthread ${CXX_LIB}
 Cflags: -I\${includedir}
 PC
 
-  echo "[generated] $PC_FILE"
-else
-  echo "[ok] Using existing pkg-config file: $PC_FILE"
-fi
+echo ">>> x265 ${X265_VERSION}: pkg-config generated at $PC_FILE"
+echo ">>> x265 ${X265_VERSION}: done"

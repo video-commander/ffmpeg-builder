@@ -10,19 +10,18 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-# Example default: FreeType 2.13.2 tag on GitHub is "VER-2-13-2"
-FREETYPE_VERSION="${PORT_FREETYPE_VERSION:-VER-2-13-2}"
-TARBALL="freetype-${FREETYPE_VERSION}.tar.gz"
-URL="https://github.com/freetype/freetype/archive/refs/tags/${FREETYPE_VERSION}.tar.gz"
+HARFBUZZ_VERSION="${PORT_HARFBUZZ_VERSION:-8.3.1}"
+TARBALL="harfbuzz-${HARFBUZZ_VERSION}.tar.gz"
+URL="https://github.com/harfbuzz/harfbuzz/archive/refs/tags/${HARFBUZZ_VERSION}.tar.gz"
 
-echo ">>> freetype ${FREETYPE_VERSION}: prefix=$PREFIX"
-echo ">>> freetype: download URL: $URL"
+echo ">>> harfbuzz ${HARFBUZZ_VERSION}: prefix=$PREFIX"
+echo ">>> harfbuzz: download URL: $URL"
 
 # ---------------------------------------------------------------------
 # Download tarball if missing
 # ---------------------------------------------------------------------
 if [[ ! -f "$SRC/$TARBALL" ]]; then
-  echo ">>> freetype: downloading $TARBALL"
+  echo ">>> harfbuzz: downloading $TARBALL"
   curl -L "$URL" -o "$SRC/$TARBALL"
 fi
 
@@ -35,15 +34,14 @@ fi
 # ---------------------------------------------------------------------
 # Extract once
 # ---------------------------------------------------------------------
-if ! find "$SRC" -maxdepth 1 -type d -name "freetype-*${FREETYPE_VERSION#VER-}*" | grep -q .; then
-  echo ">>> freetype: extracting $TARBALL"
+if ! find "$SRC" -maxdepth 1 -type d -name "harfbuzz-*${HARFBUZZ_VERSION}*" | grep -q .; then
+  echo ">>> harfbuzz: extracting $TARBALL"
   tar -xf "$SRC/$TARBALL" -C "$SRC"
 fi
 
 # Try a few common names
 CANDIDATES=(
-  "$SRC/freetype-${FREETYPE_VERSION}"          # freetype-VER-2-13-2
-  "$SRC/freetype-${FREETYPE_VERSION#VER-}"     # freetype-2-13-2
+  "$SRC/harfbuzz-${HARFBUZZ_VERSION}"
 )
 
 SRC_DIR=""
@@ -57,15 +55,15 @@ done
 
 # Fallback: glob
 if [[ -z "$SRC_DIR" ]]; then
-  SRC_DIR=$(find "$SRC" -maxdepth 1 -type d -name "freetype-*${FREETYPE_VERSION#VER-}*" | head -n1 || true)
+  SRC_DIR=$(find "$SRC" -maxdepth 1 -type d -name "harfbuzz-*${HARFBUZZ_VERSION}*" | head -n1 || true)
 fi
 
 if [[ -z "$SRC_DIR" || ! -d "$SRC_DIR" ]]; then
-  echo "ERROR: freetype source directory not found after extracting $TARBALL" >&2
+  echo "ERROR: harfbuzz source directory not found after extracting $TARBALL" >&2
   exit 1
 fi
 
-echo ">>> freetype: using source dir: $SRC_DIR"
+echo ">>> harfbuzz: using source dir: $SRC_DIR"
 
 # ---------------------------------------------------------------------
 # Configure & build (CMake)
@@ -79,9 +77,11 @@ cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DBUILD_SHARED_LIBS=OFF \
+  -DHB_BUILD_UTILS=OFF \
+  -DHB_BUILD_TESTS=OFF \
   ..
 
 ninja -j"$PAR"
 ninja install
 
-echo ">>> freetype ${FREETYPE_VERSION}: done"
+echo ">>> harfbuzz ${HARFBUZZ_VERSION}: done"

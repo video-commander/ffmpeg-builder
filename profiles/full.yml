@@ -1,21 +1,21 @@
-name: default
+name: full
 
 ffmpeg:
   version: 7.1
   enable_ffplay: false
   gpl: true
-  nonfree: false         # no fdk-aac, fully redistributable GPL build
+  nonfree: true          # enables --enable-nonfree in your builder
   ld_static: true
 
 codecs:
   x264:   true
   x265:   true
-  aom:    true           # libaom AV1
-  svtav1: false          # enable later if you want speedier AV1
-  vpx:    true           # VP8/VP9
+  aom:    true
+  svtav1: true
+  vpx:    true
   opus:   true
-  fdk_aac: false
-  ass:    true           # libass stack (freetype/fribidi/harfbuzz/libass)
+  fdk_aac: true          # nonfree
+  ass:    true
   vmaf:   true
   srt:    true
 
@@ -24,7 +24,7 @@ system:
 
 ports:
   x264:
-    version: "stable"    # handled in x264.sh (e.g. latest master or tag)
+    version: "stable"
   x265:
     version: "3.6"
   aom:
@@ -41,3 +41,5 @@ ports:
     version: "v3.0.0"
   libass:
     version: "0.17.3"
+  fdk_aac:
+    version: "v2.0.3"

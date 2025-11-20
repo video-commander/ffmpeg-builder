@@ -1,4 +1,5 @@
 .build-cache/
+.ccache/
 .env
 .DS_Store
 .vscode/

@@ -18,10 +18,27 @@ FFMPEG_VERSION=${FFMPEG_VERSION:-$(yq '.ffmpeg.version' "$PROFILE_FILE")}
 ENABLE_NONFREE=${ENABLE_NONFREE:-$(yq '.ffmpeg.nonfree' "$PROFILE_FILE")}
 PARALLEL=${PARALLEL:-$(yq '.system.parallel' "$PROFILE_FILE")}
 
+# Resolve per-port versions (with env override + profile fallback)
+PORT_X264_VERSION=$(port_version x264 "stable")
+PORT_X265_VERSION=$(port_version x265 "3.6")
+PORT_AOM_VERSION=$(port_version aom "v3.9.0")
+PORT_SVTAV1_VERSION=$(port_version svtav1 "v2.2.1")
+PORT_VPX_VERSION=$(port_version vpx "v1.14.1")
+PORT_OPUS_VERSION=$(port_version opus "v1.5.1")
+PORT_SRT_VERSION=$(port_version srt "v1.5.4")
+PORT_VMAF_VERSION=$(port_version vmaf "v3.0.0")
+PORT_LIBASS_VERSION=$(port_version libass "0.17.3")
+
+export PORT_X264_VERSION PORT_X265_VERSION PORT_AOM_VERSION \
+       PORT_SVTAV1_VERSION PORT_VPX_VERSION PORT_OPUS_VERSION \
+       PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION
+
+
+# -------------------------------------------------------------
 PREFIX="$PWD/.build-cache/prefix"
 SRC="$PWD/.build-cache/src"
 mkdir -p "$PREFIX" "$SRC"
-export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
+export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig:${PKG_CONFIG_PATH:-}"
 export PATH="$PREFIX/bin:$PATH"
 export CCACHE_DIR=${CCACHE_DIR:-$PWD/.ccache}
 
@@ -80,14 +97,19 @@ fetch_src "ffmpeg-$FFMPEG_VERSION" "https://github.com/FFmpeg/FFmpeg/archive/ref
 cd "$SRC/ffmpeg-$FFMPEG_VERSION"
 
 CONFIG_FLAGS=(
-  --prefix="$PREFIX"
-  --pkg-config-flags="--static"
-  --extra-cflags="-I$PREFIX/include"
-  --extra-ldflags="-L$PREFIX/lib"
-  --extra-libs="-lpthread -lm"
-  --enable-gpl --enable-version3
-  --disable-doc --disable-debug --enable-stripping
-  --enable-pic --enable-static --disable-shared
+  "--prefix=$PREFIX"
+  "--pkg-config-flags=--static"
+  "--extra-cflags=-I$PREFIX/include"
+  "--extra-ldflags=-L$PREFIX/lib"
+  "--extra-libs=-lpthread -lm"
+  "--enable-gpl"
+  "--enable-version3"
+  "--disable-doc"
+  "--disable-debug"
+  "--enable-stripping"
+  "--enable-pic"
+  "--enable-static"
+  "--disable-shared"
 )
 [[ "$ENABLE_NONFREE" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-nonfree)
 
@@ -106,6 +128,38 @@ CONFIG_FLAGS=(
 # FFplay
 ENABLE_FFPLAY=${ENABLE_FFPLAY:-$(yq '.ffmpeg.enable_ffplay' "$PROFILE_FILE")}
 [[ "$ENABLE_FFPLAY" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-ffplay) || CONFIG_FLAGS+=(--disable-ffplay)
+
+# ---- pkg-config environment for FFmpeg ----
+# Only search our prefix for .pc files; avoid Homebrew/system leakage
+# export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
+# export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig"
+
+echo "=== DEBUG: pkg-config env ==="
+echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
+# echo "PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+
+echo "--- DEBUG: pkg-config libass ---"
+if pkg-config --exists "libass >= 0.11.0"; then
+  echo "libass >= 0.11.0 is visible to pkg-config"
+  echo "  version: $(pkg-config --modversion libass)"
+  echo "  cflags : $(pkg-config --cflags libass)"
+  echo "  libs   : $(pkg-config --libs --static libass)"
+else
+  echo "libass >= 0.11.0 NOT visible to pkg-config (this would make FFmpeg fail)"
+fi
+echo "=== END DEBUG ==="
+
+echo "--- DEBUG: pkg-config libvmaf ---"
+if pkg-config --exists "libvmaf >= 2.0.0"; then
+  echo "libvmaf >= 2.0.0 is visible to pkg-config"
+  echo "  version: $(pkg-config --modversion libvmaf)"
+  echo "  cflags : $(pkg-config --cflags libvmaf)"
+  echo "  libs   : $(pkg-config --libs --static libvmaf)"
+else
+  echo "libvmaf >= 2.0.0 NOT visible to pkg-config (this would make FFmpeg fail)"
+fi
+echo "=== END DEBUG ==="
+
 
 log "Configure flags:
 ${CONFIG_FLAGS[*]}" | tee "$PWD/../../configure-flags.txt"
