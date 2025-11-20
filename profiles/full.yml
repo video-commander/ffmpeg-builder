@@ -4,7 +4,7 @@ ffmpeg:
   version: 7.1
   enable_ffplay: false
   gpl: true
-  nonfree: true          # enables --enable-nonfree in your builder
+  nonfree: true
   ld_static: true
 
 codecs:
@@ -14,7 +14,7 @@ codecs:
   svtav1: true
   vpx:    true
   opus:   true
-  fdk_aac: true          # nonfree
+  fdk_aac: true # non-free codec
   ass:    true
   vmaf:   true
   srt:    true

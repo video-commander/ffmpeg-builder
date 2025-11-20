@@ -11,7 +11,7 @@ codecs:
   x264:   true
   x265:   true
   aom:    true           # libaom AV1
-  svtav1: false          # enable later if you want speedier AV1
+  svtav1: false          # enable if you want speedier AV1
   vpx:    true           # VP8/VP9
   opus:   true
   fdk_aac: false
