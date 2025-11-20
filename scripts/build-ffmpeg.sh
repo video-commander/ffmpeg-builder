@@ -129,38 +129,6 @@ CONFIG_FLAGS=(
 ENABLE_FFPLAY=${ENABLE_FFPLAY:-$(yq '.ffmpeg.enable_ffplay' "$PROFILE_FILE")}
 [[ "$ENABLE_FFPLAY" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-ffplay) || CONFIG_FLAGS+=(--disable-ffplay)
 
-# ---- pkg-config environment for FFmpeg ----
-# Only search our prefix for .pc files; avoid Homebrew/system leakage
-# export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
-# export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig"
-
-echo "=== DEBUG: pkg-config env ==="
-echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
-# echo "PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-
-echo "--- DEBUG: pkg-config libass ---"
-if pkg-config --exists "libass >= 0.11.0"; then
-  echo "libass >= 0.11.0 is visible to pkg-config"
-  echo "  version: $(pkg-config --modversion libass)"
-  echo "  cflags : $(pkg-config --cflags libass)"
-  echo "  libs   : $(pkg-config --libs --static libass)"
-else
-  echo "libass >= 0.11.0 NOT visible to pkg-config (this would make FFmpeg fail)"
-fi
-echo "=== END DEBUG ==="
-
-echo "--- DEBUG: pkg-config libvmaf ---"
-if pkg-config --exists "libvmaf >= 2.0.0"; then
-  echo "libvmaf >= 2.0.0 is visible to pkg-config"
-  echo "  version: $(pkg-config --modversion libvmaf)"
-  echo "  cflags : $(pkg-config --cflags libvmaf)"
-  echo "  libs   : $(pkg-config --libs --static libvmaf)"
-else
-  echo "libvmaf >= 2.0.0 NOT visible to pkg-config (this would make FFmpeg fail)"
-fi
-echo "=== END DEBUG ==="
-
-
 log "Configure flags:
 ${CONFIG_FLAGS[*]}" | tee "$PWD/../../configure-flags.txt"
 ./configure "${CONFIG_FLAGS[@]}"

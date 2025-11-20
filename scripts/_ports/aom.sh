@@ -11,13 +11,16 @@ BUILD_DIR="$SRC_DIR/build"
 
 mkdir -p "$SRC"
 
+# Clone the AOM repository if the source directory does not already exist
 if [[ ! -d "$SRC_DIR" ]]; then
   git clone --branch "$AOM_VERSION" --depth=1 https://aomedia.googlesource.com/aom "$SRC_DIR"
 fi
 
+# Create and enter the build directory
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
+# Configure and build AOM
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \

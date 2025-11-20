@@ -11,6 +11,7 @@ BUILD_DIR="$SRC_DIR/build"
 
 mkdir -p "$SRC"
 
+# Clone the SVT-AV1 repository if the source directory does not already exist
 if [[ ! -d "$SRC_DIR" ]]; then
   git clone --branch "$SVTAV1_VERSION" --depth=1 https://gitlab.com/AOMediaCodec/SVT-AV1.git "$SRC_DIR"
 fi
@@ -18,6 +19,7 @@ fi
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
+# Configure and build SVT-AV1
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
