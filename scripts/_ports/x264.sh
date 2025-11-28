@@ -25,13 +25,17 @@ if [[ "$X264_VERSION" != "stable" ]]; then
 fi
 
 # Configure, build, and install x264
+HOST_FLAG=()
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  HOST_FLAG+=(--host="$(uname -m)-apple-darwin")
+fi
 ./configure \
   --prefix="$PREFIX" \
   --enable-static \
   --enable-pic \
   --disable-opencl \
   --disable-cli \
-  --host="$(uname -m)-apple-darwin"
+  "${HOST_FLAG[@]}"
 
 make -j"$PAR"
 make install
