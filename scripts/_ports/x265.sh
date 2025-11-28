@@ -18,7 +18,12 @@ fi
 
 # Verify tarball integrity
 if ! tar -tf "$SRC/$TARBALL" >/dev/null 2>&1; then
-  echo "ERROR: $TARBALL is not a valid tar archive (size: $(stat -f%z "$SRC/$TARBALL" 2>/dev/null || stat -c%s "$SRC/$TARBALL"))" >&2
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    SIZE=$(stat -f%z "$SRC/$TARBALL" 2>/dev/null)
+  else
+    SIZE=$(stat -c%s "$SRC/$TARBALL" 2>/dev/null)
+  fi
+  echo "ERROR: $TARBALL is not a valid tar archive (size: $SIZE)" >&2
   exit 1
 fi
 
