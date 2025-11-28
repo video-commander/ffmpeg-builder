@@ -85,15 +85,13 @@ fi
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DENABLE_SHARED=OFF \
-  -DENABLE_CLI=ON \
+  -DENABLE_CLI=OFF \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   "${EXTRA_X265_FLAGS[@]}" \
   ../source
 
 ninja -j"$PAR"
 ninja install
-
-rm -f "$PREFIX/bin/x265" || true
 
 # Create pkg-config file
 PC_DIR="$PREFIX/lib/pkgconfig"
