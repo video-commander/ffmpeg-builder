@@ -3,7 +3,7 @@ set -euo pipefail
 sudo apt-get update
 sudo apt-get install -y \
   build-essential autoconf automake libtool pkg-config \
-  cmake ninja-build nasm yasm git curl wget unzip \
+  cmake ninja-build meson nasm yasm git curl wget unzip \
   python3 python3-pip ccache
 
 # yq for YAML parsing (portable, no jq dependency)

@@ -64,3 +64,68 @@ die() {
   echo "[error] $*" >&2
   exit 1
 }
+
+# Return the version for a given port name.
+# Precedence:
+#   1. Env:  PORT_<NAME>_VERSION (e.g. PORT_X265_VERSION=3.5)
+#   2. YAML: .ports.<name>.version in $PROFILE_FILE
+#   3. Default argument
+#
+# Usage:
+#   PORT_X265_VERSION=$(port_version x265 "3.6")
+port_version() {
+  local name="$1"
+  local default="${2:-}"
+
+  # ENV override wins: PORT_X265_VERSION, PORT_AOM_VERSION, ...
+  local upper
+  upper=$(printf '%s' "$name" | tr '[:lower:]' '[:upper:]')
+  local env_var="PORT_${upper}_VERSION"
+
+  if [[ -n "${!env_var-}" ]]; then
+    echo "${!env_var}"
+    return 0
+  fi
+
+  # Profile YAML: .ports.<name>.version
+  if [[ -n "${PROFILE_FILE-}" && -f "$PROFILE_FILE" ]]; then
+    # -r: raw string, // "" to map null to empty
+    local val
+    val=$(yq -r ".ports.$name.version // \"\"" "$PROFILE_FILE")
+    if [[ -n "$val" && "$val" != "null" ]]; then
+      echo "$val"
+      return 0
+    fi
+  fi
+
+  # Fallback default
+  echo "$default"
+}
+
+# Return 1/0 whether a codec/port is enabled.
+# Precedence:
+#   1. Env: ENABLE_<NAME>=1/0 (e.g. ENABLE_X265=0)
+#   2. YAML: .codecs.<name> bool in $PROFILE_FILE
+port_enabled() {
+  local name="$1"
+
+  local upper
+  upper=$(printf '%s' "$name" | tr '[:lower:]' '[:upper:]')
+  local env_var="ENABLE_${upper}"
+
+  if [[ -n "${!env_var-}" ]]; then
+    case "${!env_var}" in
+      1|true|TRUE|yes|YES) echo 1; return 0 ;;
+      *)                   echo 0; return 0 ;;
+    esac
+  fi
+
+  if [[ -n "${PROFILE_FILE-}" && -f "$PROFILE_FILE" ]]; then
+    local val
+    val=$(yq -r ".codecs.$name // false" "$PROFILE_FILE")
+    [[ "$val" == "true" ]] && echo 1 || echo 0
+    return 0
+  fi
+
+  echo 0
+}

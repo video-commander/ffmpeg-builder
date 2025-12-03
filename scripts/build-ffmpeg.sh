@@ -18,10 +18,27 @@ FFMPEG_VERSION=${FFMPEG_VERSION:-$(yq '.ffmpeg.version' "$PROFILE_FILE")}
 ENABLE_NONFREE=${ENABLE_NONFREE:-$(yq '.ffmpeg.nonfree' "$PROFILE_FILE")}
 PARALLEL=${PARALLEL:-$(yq '.system.parallel' "$PROFILE_FILE")}
 
+# Resolve per-port versions (with env override + profile fallback)
+PORT_X264_VERSION=$(port_version x264 "stable")
+PORT_X265_VERSION=$(port_version x265 "3.6")
+PORT_AOM_VERSION=$(port_version aom "v3.9.0")
+PORT_SVTAV1_VERSION=$(port_version svtav1 "v2.2.1")
+PORT_VPX_VERSION=$(port_version vpx "v1.14.1")
+PORT_OPUS_VERSION=$(port_version opus "v1.5.1")
+PORT_SRT_VERSION=$(port_version srt "v1.5.4")
+PORT_VMAF_VERSION=$(port_version vmaf "v3.0.0")
+PORT_LIBASS_VERSION=$(port_version libass "0.17.3")
+
+export PORT_X264_VERSION PORT_X265_VERSION PORT_AOM_VERSION \
+       PORT_SVTAV1_VERSION PORT_VPX_VERSION PORT_OPUS_VERSION \
+       PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION
+
+
+# -------------------------------------------------------------
 PREFIX="$PWD/.build-cache/prefix"
 SRC="$PWD/.build-cache/src"
 mkdir -p "$PREFIX" "$SRC"
-export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
+export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig:${PKG_CONFIG_PATH:-}"
 export PATH="$PREFIX/bin:$PATH"
 export CCACHE_DIR=${CCACHE_DIR:-$PWD/.ccache}
 
@@ -80,14 +97,19 @@ fetch_src "ffmpeg-$FFMPEG_VERSION" "https://github.com/FFmpeg/FFmpeg/archive/ref
 cd "$SRC/ffmpeg-$FFMPEG_VERSION"
 
 CONFIG_FLAGS=(
-  --prefix="$PREFIX"
-  --pkg-config-flags="--static"
-  --extra-cflags="-I$PREFIX/include"
-  --extra-ldflags="-L$PREFIX/lib"
-  --extra-libs="-lpthread -lm"
-  --enable-gpl --enable-version3
-  --disable-doc --disable-debug --enable-stripping
-  --enable-pic --enable-static --disable-shared
+  "--prefix=$PREFIX"
+  "--pkg-config-flags=--static"
+  "--extra-cflags=-I$PREFIX/include"
+  "--extra-ldflags=-L$PREFIX/lib"
+  "--extra-libs=-lpthread -lm"
+  "--enable-gpl"
+  "--enable-version3"
+  "--disable-doc"
+  "--disable-debug"
+  "--enable-stripping"
+  "--enable-pic"
+  "--enable-static"
+  "--disable-shared"
 )
 [[ "$ENABLE_NONFREE" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-nonfree)
 

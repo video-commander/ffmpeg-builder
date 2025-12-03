@@ -45,6 +45,85 @@ Artifacts land in `dist/ffmpeg-<version>-<os>-<arch>[-nonfree].zip` with:
 - `ENABLE_NONFREE=1 ENABLE_FDK_AAC=1`
 - `PARALLEL=8`
 
+## Profiles & Port Versions
+
+This project uses **YAML profiles** to control how FFmpeg and its third-party codec libraries (“ports”) are built. Profiles let you define:
+
+- Which codecs to enable  
+- Whether the build is GPL/nonfree  
+- Which exact versions of libraries to use  
+- How many parallel jobs to use  
+- Whether FFmpeg is built static or shared  
+
+Profiles live in:
+
+```bash
+profiles/
+  minimal.yml
+  default.yml
+  full.yml
+```
+
+## Selecting a profile
+
+```bash
+PROFILE=profiles/default.yml ./scripts/build-ffmpeg.sh
+PROFILE=profiles/minimal.yml ./scripts/build-ffmpeg.sh
+PROFILE=profiles/full.yml    ./scripts/build-ffmpeg.sh
+```
+
+If no profile is provided, `default.yml` is used.
+
+## Available Profiles
+
+### minimal.yml
+
+A small, redistribution-safe build with only the essentials.
+
+### default.yml
+
+Recommended for most desktop apps.
+
+### full.yml
+
+Everything enabled, including nonfree `fdk-aac` (not redistributable).
+
+## YAML Structure
+
+```yaml
+ffmpeg:
+  version: 7.1
+  enable_ffplay: false
+  gpl: true
+  nonfree: false
+  ld_static: true
+...
+```
+
+## Version Pinning
+
+Each port script reads its version using:
+
+```bash
+port_version NAME DEFAULT
+```
+
+Precedence:
+
+1. Environment variable
+2. Profile YAML
+3. Default fallback
+
+Override example:
+
+```bash
+PORT_X265_VERSION=3.5 ./scripts/build-ffmpeg.sh
+```
+
+## Nonfree Builds
+
+Nonfree builds cannot be redistributed.
+
 ---
 
 ## Notes & tips

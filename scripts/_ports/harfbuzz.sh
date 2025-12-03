@@ -10,11 +10,11 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-FREETYPE_VERSION="${PORT_FREETYPE_VERSION:-VER-2-13-2}"
-TARBALL="freetype-${FREETYPE_VERSION}.tar.gz"
-URL="https://github.com/freetype/freetype/archive/refs/tags/${FREETYPE_VERSION}.tar.gz"
+HARFBUZZ_VERSION="${PORT_HARFBUZZ_VERSION:-8.3.1}"
+TARBALL="harfbuzz-${HARFBUZZ_VERSION}.tar.gz"
+URL="https://github.com/harfbuzz/harfbuzz/archive/refs/tags/${HARFBUZZ_VERSION}.tar.gz"
 
-# Download and extract freetype source code
+# Download and extract harfbuzz source code
 if [[ ! -f "$SRC/$TARBALL" ]]; then
   curl -L "$URL" -o "$SRC/$TARBALL"
 fi
@@ -26,30 +26,18 @@ if ! tar -tf "$SRC/$TARBALL" >/dev/null 2>&1; then
 fi
 
 # Extract the source if not already extracted
-if ! find "$SRC" -maxdepth 1 -type d -name "freetype-*${FREETYPE_VERSION#VER-}*" | grep -q .; then
+if ! find "$SRC" -maxdepth 1 -type d -name "harfbuzz-*${HARFBUZZ_VERSION}*" | grep -q .; then
   tar -xf "$SRC/$TARBALL" -C "$SRC"
 fi
 
 # Locate the source directory
-CANDIDATES=(
-  "$SRC/freetype-${FREETYPE_VERSION}"
-  "$SRC/freetype-${FREETYPE_VERSION#VER-}"
-)
-
-SRC_DIR=""
-for c in "${CANDIDATES[@]}"; do
-  if [[ -d "$c" ]]; then
-    SRC_DIR="$c"
-    break
-  fi
-done
-
-if [[ -z "$SRC_DIR" ]]; then
-  SRC_DIR=$(find "$SRC" -maxdepth 1 -type d -name "freetype-*${FREETYPE_VERSION#VER-}*" | head -n1 || true)
+SRC_DIR="$SRC/harfbuzz-${HARFBUZZ_VERSION}"
+if [[ ! -d "$SRC_DIR" ]]; then
+  SRC_DIR=$(find "$SRC" -maxdepth 1 -type d -name "harfbuzz-*${HARFBUZZ_VERSION}*" | head -n1 || true)
 fi
 
 if [[ -z "$SRC_DIR" || ! -d "$SRC_DIR" ]]; then
-  echo "ERROR: freetype source directory not found after extracting $TARBALL" >&2
+  echo "ERROR: harfbuzz source directory not found after extracting $TARBALL" >&2
   exit 1
 fi
 BUILD_DIR="$SRC_DIR/build"
@@ -57,11 +45,13 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-# Configure, build, and install freetype
+# Configure, build, and install harfbuzz
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DBUILD_SHARED_LIBS=OFF \
+  -DHB_BUILD_UTILS=OFF \
+  -DHB_BUILD_TESTS=OFF \
   ..
 
 ninja -j"$PAR"
