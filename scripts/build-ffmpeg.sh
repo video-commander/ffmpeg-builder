@@ -25,13 +25,14 @@ PORT_AOM_VERSION=$(port_version aom "v3.9.0")
 PORT_SVTAV1_VERSION=$(port_version svtav1 "v2.2.1")
 PORT_VPX_VERSION=$(port_version vpx "v1.14.1")
 PORT_OPUS_VERSION=$(port_version opus "v1.5.1")
+PORT_OPENSSL_VERSION=$(port_version openssl "3.3.2")
 PORT_SRT_VERSION=$(port_version srt "v1.5.4")
 PORT_VMAF_VERSION=$(port_version vmaf "v3.0.0")
 PORT_LIBASS_VERSION=$(port_version libass "0.17.3")
 
 export PORT_X264_VERSION PORT_X265_VERSION PORT_AOM_VERSION \
        PORT_SVTAV1_VERSION PORT_VPX_VERSION PORT_OPUS_VERSION \
-       PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION
+       PORT_OPENSSL_VERSION PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION
 
 
 # -------------------------------------------------------------
@@ -89,6 +90,7 @@ pushd "$SCRIPT_DIR/_ports" >/dev/null
     ./libass.sh   "$SRC" "$PREFIX" "$PARALLEL"
   fi
   [[ "$ENABLE_VMAF" =~ ^(true|1)$ ]] && ./vmaf.sh "$SRC" "$PREFIX" "$PARALLEL"
+  [[ "$ENABLE_SRT"  =~ ^(true|1)$ ]] && ./openssl.sh "$SRC" "$PREFIX" "$PARALLEL"
   [[ "$ENABLE_SRT"  =~ ^(true|1)$ ]] && ./srt.sh  "$SRC" "$PREFIX" "$PARALLEL"
 popd >/dev/null
 
