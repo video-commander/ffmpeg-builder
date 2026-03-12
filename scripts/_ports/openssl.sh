@@ -33,8 +33,7 @@ cd "$SRC/$TOPDIR"
   --prefix="$PREFIX" \
   --openssldir="$PREFIX/ssl" \
   no-shared \
-  no-tests \
-  -j"$PAR"
+  no-tests
 
 make -j"$PAR"
 make install_sw
