@@ -87,7 +87,7 @@ cmake -G Ninja \
   -DENABLE_SHARED=OFF \
   -DENABLE_CLI=OFF \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-  "${EXTRA_X265_FLAGS[@]}" \
+  ${EXTRA_X265_FLAGS[@]+"${EXTRA_X265_FLAGS[@]}"} \
   ../source
 
 ninja -j"$PAR"
