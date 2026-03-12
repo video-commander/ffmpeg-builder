@@ -110,6 +110,12 @@ CONFIG_FLAGS=(
   "--enable-pic"
   "--enable-static"
   "--disable-shared"
+  "--disable-xlib"
+  "--disable-libxcb"
+  "--disable-libxcb-shm"
+  "--disable-libxcb-xfixes"
+  "--disable-libxcb-shape"
+  "--disable-sdl2"
 )
 [[ "$ENABLE_NONFREE" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-nonfree)
 
