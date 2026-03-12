@@ -35,7 +35,7 @@ fi
   --enable-pic \
   --disable-opencl \
   --disable-cli \
-  "${HOST_FLAG[@]}"
+  ${HOST_FLAG[@]+"${HOST_FLAG[@]}"}
 
 make -j"$PAR"
 make install

@@ -112,6 +112,14 @@ jobs:
         shell: bash
         run: ./scripts/build-ffmpeg.sh
 
+      - name: Upload FFmpeg config.log on failure (macOS/Linux)
+        if: runner.os != 'Windows' && failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-config-log-${{ matrix.os }}-${{ matrix.arch }}
+          path: .build-cache/src/ffmpeg-*/ffbuild/config.log
+          if-no-files-found: ignore
+
       - name: Build FFmpeg (Windows)
         if: runner.os == 'Windows'
         shell: pwsh

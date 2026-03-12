@@ -72,13 +72,11 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-# Configure extra flags for ARM macOS
+# Configure extra flags for macOS (assembly causes linker issues with Xcode 26+)
 EXTRA_X265_FLAGS=()
-if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
-  EXTRA_X265_FLAGS+=(
-    -DENABLE_ASSEMBLY=OFF
-    -DENABLE_NEON=OFF
-  )
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  EXTRA_X265_FLAGS+=(-DENABLE_ASSEMBLY=OFF)
+  [[ "$(uname -m)" == "arm64" ]] && EXTRA_X265_FLAGS+=(-DENABLE_NEON=OFF)
 fi
 
 # Configure and build
