@@ -54,6 +54,8 @@ jobs:
         ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nonfree || false }}
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       BUILD_CACHE: ${{ github.workspace }}/.build-cache
+      # Exposed for use in step `if` conditions — empty string when secret is not set
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
 
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +70,26 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('profiles/**/*.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.arch }}-
+
+      # Signing and notarization are optional — skipped automatically if secrets are not set.
+      # Required to run on macOS without a Gatekeeper warning. See README for setup instructions.
+      - name: Import Apple certificate (macOS)
+        if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
+        env:
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          rm certificate.p12
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | head -n 1)
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
 
       - name: Bootstrap toolchain (Linux/macOS)
         if: runner.os != 'Windows'
@@ -95,6 +117,16 @@ jobs:
         shell: pwsh
         run: ./scripts/build-ffmpeg.ps1
 
+      - name: Sign binaries (macOS)
+        if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
+        run: |
+          set -euo pipefail
+          for bin in out/*/bin/ffmpeg out/*/bin/ffprobe .build-cache/out/*/bin/ffmpeg .build-cache/out/*/bin/ffprobe; do
+            [ -x "$bin" ] || continue
+            codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$bin"
+            echo "Signed: $bin"
+          done
+
       - name: Package artifacts (POSIX)
         if: runner.os != 'Windows'
         shell: bash
@@ -104,6 +136,25 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/package.ps1
+
+      - name: Notarize (macOS)
+        if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
+        env:
+          APPLE_API_KEY_CONTENTS: ${{ secrets.APPLE_API_KEY_CONTENTS }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          set -euo pipefail
+          echo "$APPLE_API_KEY_CONTENTS" | base64 --decode > AuthKey.p8
+          for zip in dist/*.zip; do
+            echo "==> Notarizing $zip"
+            xcrun notarytool submit "$zip" \
+              --key AuthKey.p8 \
+              --key-id "$APPLE_API_KEY" \
+              --issuer "$APPLE_API_ISSUER" \
+              --wait
+          done
+          rm AuthKey.p8
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
