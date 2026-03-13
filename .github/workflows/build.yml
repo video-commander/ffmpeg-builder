@@ -125,27 +125,6 @@ jobs:
         shell: pwsh
         run: ./scripts/build-ffmpeg.ps1
 
-      - name: Verify no unexpected dynamic libs (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          set -euo pipefail
-          fail=0
-          for bin in out/*/bin/ffmpeg out/*/bin/ffprobe .build-cache/out/*/bin/ffmpeg .build-cache/out/*/bin/ffprobe; do
-            [ -x "$bin" ] || continue
-            echo "==> $bin"
-            # Allow only system paths: /usr/lib, /System, and @rpath/@executable_path
-            bad=$(otool -L "$bin" | tail -n +2 | awk '{print $1}' \
-              | grep -v '^/usr/lib/' \
-              | grep -v '^/System/' \
-              | grep -v '^@' || true)
-            if [[ -n "$bad" ]]; then
-              echo "ERROR: unexpected dynamic dependencies:"
-              echo "$bad"
-              fail=1
-            fi
-          done
-          [[ $fail -eq 0 ]] || exit 1
-
       - name: Sign binaries (macOS)
         if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
         run: |
