@@ -1,7 +1,7 @@
 name: default
 
 ffmpeg:
-  version: 7.1
+  version: 8.0.1
   enable_ffplay: false
   gpl: true
   nonfree: false         # no fdk-aac, fully redistributable GPL build
@@ -32,11 +32,9 @@ ports:
   svtav1:
     version: "v2.2.1"
   vpx:
-    version: "v1.14.1"
+    version: "v1.16.0"
   opus:
     version: "v1.5.1"
-  openssl:
-    version: "3.3.2"
   srt:
     version: "v1.5.4"
   vmaf:

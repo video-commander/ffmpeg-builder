@@ -4,7 +4,7 @@ sudo apt-get update
 sudo apt-get install -y \
   build-essential autoconf automake libtool pkg-config \
   cmake ninja-build meson nasm yasm git curl wget unzip \
-  python3 python3-pip ccache
+  python3 python3-pip ccache libssl-dev
 
 # yq for YAML parsing (portable, no jq dependency)
 sudo wget -O /usr/local/bin/yq \

@@ -1,7 +1,7 @@
 name: minimal
 
 ffmpeg:
-  version: 7.1
+  version: 8.0.1
   enable_ffplay: false
   gpl: true
   nonfree: false

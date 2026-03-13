@@ -35,9 +35,9 @@ jobs:
           - os: macos-26
             arch: arm64
             runner: macos-26
-          - os: macos-26-intel
-            arch: x86_64
-            runner: macos-26-intel
+          # - os: macos-26-intel
+          #   arch: x86_64
+          #   runner: macos-26-intel
           # - os: windows-2022
           #   arch: x86_64
           #   runner: windows-2022

@@ -1,7 +1,7 @@
 name: full
 
 ffmpeg:
-  version: 7.1
+  version: 8.0.1
   enable_ffplay: false
   gpl: true
   nonfree: true
@@ -32,7 +32,7 @@ ports:
   svtav1:
     version: "v2.2.1"
   vpx:
-    version: "v1.14.1"
+    version: "v1.16.0"
   opus:
     version: "v1.5.1"
   srt:

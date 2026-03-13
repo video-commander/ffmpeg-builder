@@ -5,7 +5,7 @@ SRC="$1"
 PREFIX="$2"
 PAR="$3"
 
-VPX_VERSION="${PORT_VPX_VERSION:-v1.14.1}"
+VPX_VERSION="${PORT_VPX_VERSION:-v1.16.0}"
 TARBALL="libvpx-${VPX_VERSION}.tar.gz"
 URL="https://github.com/webmproject/libvpx/archive/refs/tags/${VPX_VERSION}.tar.gz"
 
@@ -52,8 +52,17 @@ if [[ -z "$SRC_DIR" || ! -d "$SRC_DIR" ]]; then
 fi
 cd "$SRC_DIR"
 
+# Determine the libvpx target — its configure script doesn't auto-detect arm64-darwin
+VPX_TARGET_FLAG=()
+if [[ "$(uname)" == "Darwin" ]]; then
+  DARWIN_VER=$(uname -r | cut -d. -f1)
+  ARCH=$(uname -m)
+  VPX_TARGET_FLAG=("--target=${ARCH}-darwin${DARWIN_VER}-gcc")
+fi
+
 # Configure, build, and install libvpx
 ./configure \
+  "${VPX_TARGET_FLAG[@]}" \
   --prefix="$PREFIX" \
   --disable-shared \
   --enable-static \

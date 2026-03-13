@@ -1,0 +1,23 @@
+name: video-commander
+ffmpeg:
+  version: 8.0.1
+  enable_ffplay: false
+  gpl: true
+  nonfree: false   # flip to true when enabling fdk-aac
+  ld_static: true
+codecs:
+  x264:   true     # H.264
+  x265:   true     # HEVC
+  aom:    true     # AV1 (libaom)
+  svtav1: true     # AV1 (SVT-AV1, faster)
+  vpx:    true     # VP9
+  opus:   true
+  fdk_aac: false   # opt-in (nonfree)
+  ass:    true     # libass (subtitles)
+  vmaf:   true     # libvmaf (quality metrics)
+  srt:    false    # libsrt (networking) — enable if you need it
+system:
+  macos_deployment_target: "11.0"
+  linux_triplet: x86_64-linux-gnu
+  windows_triplet: x86_64-w64-mingw32
+  parallel: 6
