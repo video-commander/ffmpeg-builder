@@ -41,10 +41,16 @@ mkdir -p "$PREFIX" "$SRC"
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig:${PKG_CONFIG_PATH:-}"
 export PATH="$PREFIX/bin:$PATH"
 
-# On macOS, Homebrew OpenSSL is not on the default pkg-config path
+# On macOS, Homebrew OpenSSL is not on the default pkg-config path.
+# We also resolve the static lib paths now so we can force static linking later —
+# macOS's linker prefers .dylib over .a even when both exist in the same dir.
+OPENSSL_STATIC_LIBS=""
 if [[ "$(uname)" == "Darwin" ]] && command -v brew >/dev/null; then
   BREW_OPENSSL="$(brew --prefix openssl 2>/dev/null || true)"
-  [[ -n "$BREW_OPENSSL" ]] && export PKG_CONFIG_PATH="$BREW_OPENSSL/lib/pkgconfig:$PKG_CONFIG_PATH"
+  if [[ -n "$BREW_OPENSSL" ]]; then
+    export PKG_CONFIG_PATH="$BREW_OPENSSL/lib/pkgconfig:$PKG_CONFIG_PATH"
+    OPENSSL_STATIC_LIBS="$BREW_OPENSSL/lib/libssl.a $BREW_OPENSSL/lib/libcrypto.a"
+  fi
 fi
 export CCACHE_DIR=${CCACHE_DIR:-$PWD/.ccache}
 
@@ -107,7 +113,7 @@ CONFIG_FLAGS=(
   "--pkg-config-flags=--static"
   "--extra-cflags=-I$PREFIX/include"
   "--extra-ldflags=-L$PREFIX/lib"
-  "--extra-libs=-lpthread -lm"
+  "--extra-libs=-lpthread -lm $OPENSSL_STATIC_LIBS"
   "--enable-gpl"
   "--enable-version3"
   "--disable-doc"
