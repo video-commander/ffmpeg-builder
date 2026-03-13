@@ -35,6 +35,8 @@ ports:
     version: "v1.16.0"
   opus:
     version: "v1.5.1"
+  openssl:
+    version: "3.3.2"
   srt:
     version: "v1.5.4"
   vmaf:

@@ -23,15 +23,16 @@ PORT_X264_VERSION=$(port_version x264 "stable")
 PORT_X265_VERSION=$(port_version x265 "3.6")
 PORT_AOM_VERSION=$(port_version aom "v3.9.0")
 PORT_SVTAV1_VERSION=$(port_version svtav1 "v2.2.1")
-PORT_VPX_VERSION=$(port_version vpx "v1.14.1")
+PORT_VPX_VERSION=$(port_version vpx "v1.16.0")
 PORT_OPUS_VERSION=$(port_version opus "v1.5.1")
+PORT_OPENSSL_VERSION=$(port_version openssl "3.3.2")
 PORT_SRT_VERSION=$(port_version srt "v1.5.4")
 PORT_VMAF_VERSION=$(port_version vmaf "v3.0.0")
 PORT_LIBASS_VERSION=$(port_version libass "0.17.3")
 
 export PORT_X264_VERSION PORT_X265_VERSION PORT_AOM_VERSION \
        PORT_SVTAV1_VERSION PORT_VPX_VERSION PORT_OPUS_VERSION \
-       PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION
+       PORT_OPENSSL_VERSION PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION
 
 
 # -------------------------------------------------------------
@@ -40,18 +41,6 @@ SRC="$PWD/.build-cache/src"
 mkdir -p "$PREFIX" "$SRC"
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig:${PKG_CONFIG_PATH:-}"
 export PATH="$PREFIX/bin:$PATH"
-
-# On macOS, Homebrew OpenSSL is not on the default pkg-config path.
-# We also resolve the static lib paths now so we can force static linking later —
-# macOS's linker prefers .dylib over .a even when both exist in the same dir.
-OPENSSL_STATIC_LIBS=""
-if [[ "$(uname)" == "Darwin" ]] && command -v brew >/dev/null; then
-  BREW_OPENSSL="$(brew --prefix openssl 2>/dev/null || true)"
-  if [[ -n "$BREW_OPENSSL" ]]; then
-    export PKG_CONFIG_PATH="$BREW_OPENSSL/lib/pkgconfig:$PKG_CONFIG_PATH"
-    OPENSSL_STATIC_LIBS="$BREW_OPENSSL/lib/libssl.a $BREW_OPENSSL/lib/libcrypto.a"
-  fi
-fi
 export CCACHE_DIR=${CCACHE_DIR:-$PWD/.ccache}
 
 # Resolve codec toggles with env override > profile
@@ -101,6 +90,7 @@ pushd "$SCRIPT_DIR/_ports" >/dev/null
     ./libass.sh   "$SRC" "$PREFIX" "$PARALLEL"
   fi
   [[ "$ENABLE_VMAF" =~ ^(true|1)$ ]] && ./vmaf.sh "$SRC" "$PREFIX" "$PARALLEL"
+  ./openssl.sh "$SRC" "$PREFIX" "$PARALLEL"
   [[ "$ENABLE_SRT"  =~ ^(true|1)$ ]] && ./srt.sh  "$SRC" "$PREFIX" "$PARALLEL"
 popd >/dev/null
 
@@ -113,7 +103,7 @@ CONFIG_FLAGS=(
   "--pkg-config-flags=--static"
   "--extra-cflags=-I$PREFIX/include"
   "--extra-ldflags=-L$PREFIX/lib"
-  "--extra-libs=-lpthread -lm $OPENSSL_STATIC_LIBS"
+  "--extra-libs=-lpthread -lm"
   "--enable-gpl"
   "--enable-version3"
   "--disable-doc"
