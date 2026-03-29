@@ -5,7 +5,8 @@ if (-not $PROFILE_FILE) { $PROFILE_FILE = 'profiles/desktop-default.yml' }
 $FFMPEG_VERSION = if ($env:FFMPEG_VERSION) { $env:FFMPEG_VERSION } else { (yq '.ffmpeg.version' $PROFILE_FILE) }
 $ENABLE_NONFREE = if ($env:ENABLE_NONFREE) { $env:ENABLE_NONFREE } else { (yq '.ffmpeg.nonfree' $PROFILE_FILE) }
 
-# Delegate to MSYS2 environment
+# Delegate to MSYS2 MINGW64 environment
+$env:MSYSTEM = "MINGW64"
 & "$env:USERPROFILE\scoop\apps\msys2\current\usr\bin\bash" -lc @"
 set -euo pipefail
 PREFIX="`$PWD/.build-cache/prefix"
