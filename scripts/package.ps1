@@ -14,7 +14,7 @@ if [[ ! -x "`$OUT_DIR/bin/ffmpeg.exe" ]]; then
 fi
 
 # Get version from binary
-ver=`$("$OUT_DIR/bin/ffmpeg.exe" -version 2>&1 | awk 'NR==1{print `$3}')
+ver=`$("`$OUT_DIR/bin/ffmpeg.exe" -version 2>&1 | awk 'NR==1{print `$3}')
 
 # Copy required MinGW runtime DLLs (skip Windows system DLLs)
 for bin in `$OUT_DIR/bin/*.exe; do
