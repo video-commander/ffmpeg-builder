@@ -22,6 +22,7 @@ cd `$SRC/ffmpeg
   --enable-gpl --enable-version3 \
   --enable-libx264 --enable-libx265 --enable-libaom --enable-libvpx --enable-libopus \
   --disable-doc --disable-debug --enable-stripping --enable-static --disable-shared \
+  --extra-ldflags="-Wl,--start-group" --extra-ldexeflags="-Wl,--end-group" \
   `$( [[ "$($env:ENABLE_NONFREE)" == "true" ]] && echo --enable-nonfree )
 
 make -j`$(nproc)
