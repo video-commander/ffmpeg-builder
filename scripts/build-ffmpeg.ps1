@@ -6,7 +6,7 @@ $FFMPEG_VERSION = if ($env:FFMPEG_VERSION) { $env:FFMPEG_VERSION } else { (yq '.
 $ENABLE_NONFREE = if ($env:ENABLE_NONFREE) { $env:ENABLE_NONFREE } else { (yq '.ffmpeg.nonfree' $PROFILE_FILE) }
 
 # Delegate to MSYS2 environment
-& C:\msys64\usr\bin\bash -lc @"
+& "$env:USERPROFILE\scoop\apps\msys2\current\usr\bin\bash" -lc @"
 set -euo pipefail
 PREFIX="`$PWD/.build-cache/prefix"
 SRC="`$PWD/.build-cache/src"
