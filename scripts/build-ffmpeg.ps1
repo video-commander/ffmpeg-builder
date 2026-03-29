@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $env:MSYSTEM = "MINGW64"
+$env:CHERE_INVOKING = "1"
 & "C:\msys64\usr\bin\bash.exe" -lc @"
 set -euo pipefail
 PREFIX="`$PWD/.build-cache/prefix"
