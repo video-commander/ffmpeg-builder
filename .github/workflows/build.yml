@@ -18,29 +18,66 @@ on:
         required: false
         default: false
         type: boolean
+      macos_arm64:
+        description: Build macOS arm64
+        required: false
+        default: true
+        type: boolean
+      macos_x86_64:
+        description: Build macOS x86_64 (Intel)
+        required: false
+        default: false
+        type: boolean
+      linux_x86_64:
+        description: Build Linux x86_64
+        required: false
+        default: false
+        type: boolean
+      windows_x86_64:
+        description: Build Windows x86_64
+        required: false
+        default: false
+        type: boolean
   push:
     tags:
       - "v*"
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        shell: bash
+        run: |
+          # On tag push, build all platforms. On workflow_dispatch, use the selected inputs.
+          BUILD_ALL=${{ github.event_name != 'workflow_dispatch' }}
+
+          ENTRIES='[]'
+          add() { ENTRIES=$(echo "$ENTRIES" | jq --argjson e "$1" '. + [$e]'); }
+
+          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.macos_arm64 }}" == "true" ]]; then
+            add '{"os":"macos-26","arch":"arm64","runner":"macos-26"}'
+          fi
+          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.macos_x86_64 }}" == "true" ]]; then
+            add '{"os":"macos-26-intel","arch":"x86_64","runner":"macos-26-intel"}'
+          fi
+          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.linux_x86_64 }}" == "true" ]]; then
+            add '{"os":"ubuntu-22.04","arch":"x86_64","runner":"ubuntu-22.04"}'
+          fi
+          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.windows_x86_64 }}" == "true" ]]; then
+            add '{"os":"windows-2022","arch":"x86_64","runner":"windows-2022"}'
+          fi
+
+          echo "matrix={\"include\":$ENTRIES}" >> $GITHUB_OUTPUT
+
   build:
+    needs: setup
     name: ${{ matrix.os }} • ${{ matrix.arch }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          # - os: ubuntu-22.04
-          #   arch: x86_64
-          #   runner: ubuntu-22.04
-          - os: macos-26
-            arch: arm64
-            runner: macos-26
-          # - os: macos-26-intel
-          #   arch: x86_64
-          #   runner: macos-26-intel
-          # - os: windows-2022
-          #   arch: x86_64
-          #   runner: windows-2022
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     runs-on: ${{ matrix.runner }}
 
