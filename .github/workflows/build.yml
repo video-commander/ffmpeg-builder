@@ -55,7 +55,7 @@ jobs:
           BUILD_ALL=${{ github.event_name != 'workflow_dispatch' }}
 
           ENTRIES='[]'
-          add() { ENTRIES=$(echo "$ENTRIES" | jq --argjson e "$1" '. + [$e]'); }
+          add() { ENTRIES=$(echo "$ENTRIES" | jq -c --argjson e "$1" '. + [$e]'); }
 
           if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.macos_arm64 }}" == "true" ]]; then
             add '{"os":"macos-26","arch":"arm64","runner":"macos-26"}'
