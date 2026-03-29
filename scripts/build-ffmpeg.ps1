@@ -35,9 +35,9 @@ cd \$SRC/ffmpeg
   --enable-gpl --enable-version3 \
   --enable-libx264 --enable-libx265 --enable-libaom --enable-libsvtav1 --enable-libvpx --enable-libopus \
   --disable-doc --disable-debug --enable-stripping --enable-static --disable-shared \
-  \$( [[ "$ENABLE_NONFREE" == "true" || "$ENABLE_NONFREE" == "1" ]] && echo --enable-nonfree )
+  `$( [[ "$ENABLE_NONFREE" == "true" || "$ENABLE_NONFREE" == "1" ]] && echo --enable-nonfree )
 
-make -j\$(nproc)
+make -j`$(nproc)
 make install
 
 OUT_DIR="\$PWD/../../out/windows-x86_64"
