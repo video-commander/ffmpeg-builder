@@ -154,7 +154,7 @@ jobs:
           msystem: MINGW64
           update: true
           install: >-
-            base-devel git nasm yasm cmake ninja
+            base-devel git nasm yasm cmake ninja zip
             mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkgconf
             mingw-w64-x86_64-x264 mingw-w64-x86_64-x265
             mingw-w64-x86_64-aom mingw-w64-x86_64-opus mingw-w64-x86_64-libvpx
@@ -174,8 +174,8 @@ jobs:
 
       - name: Build FFmpeg (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./scripts/build-ffmpeg.ps1
+        shell: msys2 {0}
+        run: ./scripts/build-ffmpeg-windows.sh
 
       - name: Sign binaries (macOS)
         if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
@@ -194,8 +194,8 @@ jobs:
 
       - name: Package artifacts (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./scripts/package.ps1
+        shell: msys2 {0}
+        run: ./scripts/package-windows.sh
 
       - name: Notarize (macOS)
         if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
