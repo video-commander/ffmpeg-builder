@@ -5,6 +5,7 @@ $env:MSYSTEM = "MINGW64"
 $env:CHERE_INVOKING = "1"
 & "C:\msys64\usr\bin\bash.exe" -lc @"
 set -euo pipefail
+export PATH="/mingw64/bin:/usr/bin:${PATH:-}"
 PREFIX="`$PWD/.build-cache/prefix"
 SRC="`$PWD/.build-cache/src"
 mkdir -p "`$PREFIX" "`$SRC"
