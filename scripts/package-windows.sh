@@ -13,7 +13,9 @@ ver=$("$OUT_DIR/bin/ffmpeg.exe" -version 2>&1 | awk 'NR==1{print $3}')
 
 # Copy required MinGW runtime DLLs (skip Windows system DLLs)
 for bin in "$OUT_DIR/bin/"*.exe; do
-  ldd "$bin" | awk '{print $3}' | grep -i '/mingw64/bin/' | while read dll; do
+  dlls=$(ldd "$bin" | awk '{print $3}' | grep -i '/mingw64/bin/' || true)
+  [[ -z "$dlls" ]] && continue
+  echo "$dlls" | while read dll; do
     [[ -f "$dll" ]] && cp -n "$dll" "$OUT_DIR/bin/" && echo "Copied: $(basename "$dll")"
   done
 done
