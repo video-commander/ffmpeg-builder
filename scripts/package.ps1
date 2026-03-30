@@ -11,8 +11,12 @@ if (-not (Test-Path $ffmpeg)) {
   throw "[error] No ffmpeg.exe found in $outDir\bin"
 }
 
-# Get version
-$ver = (& $ffmpeg -version 2>&1)[0] -replace '^ffmpeg version (\S+).*', '$1'
+# Get version from env or binary (via bash where DLLs are available)
+$ver = if ($env:FFMPEG_VERSION) {
+  $env:FFMPEG_VERSION
+} else {
+  (& "C:\msys64\usr\bin\bash.exe" -lc "$($ffmpeg -replace '\\', '/') -version 2>&1" | Select-String 'ffmpeg version').ToString() -replace '^.*ffmpeg version (\S+).*', '$1'
+}
 
 # Find required MinGW DLLs via ldd, skip Windows system DLLs
 $script = @'
