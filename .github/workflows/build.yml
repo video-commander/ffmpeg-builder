@@ -47,12 +47,21 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      ffmpeg_version: ${{ steps.set-matrix.outputs.ffmpeg_version }}
     steps:
+      - uses: actions/checkout@v4
       - id: set-matrix
         shell: bash
         run: |
           # On tag push, build all platforms. On workflow_dispatch, use the selected inputs.
           BUILD_ALL=${{ github.event_name != 'workflow_dispatch' }}
+
+          # Resolve FFmpeg version from input or profile
+          FFMPEG_VERSION="${{ inputs.ffmpeg_version }}"
+          if [[ -z "$FFMPEG_VERSION" ]]; then
+            FFMPEG_VERSION=$(yq '.ffmpeg.version' profiles/default.yml)
+          fi
+          echo "ffmpeg_version=$FFMPEG_VERSION" >> $GITHUB_OUTPUT
 
           ENTRIES='[]'
           add() { ENTRIES=$(echo "$ENTRIES" | jq -c --argjson e "$1" '. + [$e]'); }
@@ -85,8 +94,7 @@ jobs:
       # Use workflow_dispatch inputs when present, otherwise fall back to defaults
       PROFILE: >-
         ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.profile || 'profiles/default.yml' }}
-      FFMPEG_VERSION: >-
-        ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ffmpeg_version || '' }}
+      FFMPEG_VERSION: ${{ needs.setup.outputs.ffmpeg_version }}
       ENABLE_NONFREE: >-
         ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nonfree || false }}
       CCACHE_DIR: ${{ github.workspace }}/.ccache
