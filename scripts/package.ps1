@@ -17,7 +17,7 @@ $ver = (& $ffmpeg -version 2>&1)[0] -replace '^ffmpeg version (\S+).*', '$1'
 # Find required MinGW DLLs via ldd, skip Windows system DLLs
 $script = @'
 for bin in .build-cache/out/windows-x86_64/bin/*.exe; do
-  ldd "$bin" | awk '{print $3}' | grep -iv '^/c/windows' | grep -v 'not found' | grep -v '^$'
+  ldd "$bin" | awk '{print $3}' | grep -i '/mingw64/bin/'
 done
 '@
 $tmpScript = [System.IO.Path]::GetTempFileName() + ".sh"
