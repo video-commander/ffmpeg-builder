@@ -4,44 +4,42 @@ $ErrorActionPreference = 'Stop'
 $env:MSYSTEM = "MINGW64"
 $env:CHERE_INVOKING = "1"
 
-$enableNonfree = $env:ENABLE_NONFREE
+$outDir = ".build-cache\out\windows-x86_64"
+$ffmpeg = "$outDir\bin\ffmpeg.exe"
 
+if (-not (Test-Path $ffmpeg)) {
+  throw "[error] No ffmpeg.exe found in $outDir\bin"
+}
+
+# Get version
+$ver = (& $ffmpeg -version 2>&1)[0] -replace '^ffmpeg version (\S+).*', '$1'
+
+# Find required MinGW DLLs via ldd, skip Windows system DLLs
 $script = @'
-set -euo pipefail
-
-OUT_DIR=".build-cache/out/windows-x86_64"
-
-if [[ ! -x "$OUT_DIR/bin/ffmpeg.exe" ]]; then
-  echo "[error] No ffmpeg.exe found in $OUT_DIR/bin"
-  exit 1
-fi
-
-# Get version from binary
-ver=$("$OUT_DIR/bin/ffmpeg.exe" -version 2>&1 | awk 'NR==1{print $3}')
-
-# Copy required MinGW runtime DLLs (skip Windows system DLLs)
-for bin in "$OUT_DIR/bin/"*.exe; do
-  ldd "$bin" | awk '{print $3}' | grep -v '^/c/Windows' | grep -v 'not found' | grep -v '^$' | while read dll; do
-    [[ -f "$dll" ]] && cp -n "$dll" "$OUT_DIR/bin/" && echo "Copied: $dll"
-  done
+for bin in .build-cache/out/windows-x86_64/bin/*.exe; do
+  ldd "$bin" | awk '{print $3}' | grep -iv '^/c/windows' | grep -v 'not found' | grep -v '^$'
 done
-
-NONFREE_SUFFIX=""
-[[ "ENABLE_NONFREE_PLACEHOLDER" == "true" ]] && NONFREE_SUFFIX="-nonfree"
-
-mkdir -p dist
-zip_path="dist/ffmpeg-${ver}-windows-x86_64${NONFREE_SUFFIX}.zip"
-(cd .build-cache/out && zip -r "../../$zip_path" windows-x86_64)
-
-echo "==> Package written: $zip_path"
 '@
-
-$script = $script -replace 'ENABLE_NONFREE_PLACEHOLDER', $enableNonfree
-
 $tmpScript = [System.IO.Path]::GetTempFileName() + ".sh"
-$script | Set-Content -Path $tmpScript -Encoding UTF8 -NoNewline
+[System.IO.File]::WriteAllText($tmpScript, $script, [System.Text.Encoding]::ASCII)
 $tmpScriptMsys = & "C:\msys64\usr\bin\cygpath.exe" $tmpScript
 
-& "C:\msys64\usr\bin\bash.exe" -lc "bash '$tmpScriptMsys'"
-
+$dlls = & "C:\msys64\usr\bin\bash.exe" -lc "bash '$tmpScriptMsys'" | Sort-Object -Unique
 Remove-Item $tmpScript
+
+foreach ($dll in $dlls) {
+  $dllWin = & "C:\msys64\usr\bin\cygpath.exe" -w $dll
+  $dest = "$outDir\bin\$(Split-Path $dllWin -Leaf)"
+  if (-not (Test-Path $dest)) {
+    Copy-Item $dllWin $dest
+    Write-Host "Copied: $(Split-Path $dllWin -Leaf)"
+  }
+}
+
+# Package
+$nonfree = if ($env:ENABLE_NONFREE -eq "true") { "-nonfree" } else { "" }
+New-Item -ItemType Directory -Force -Path "dist" | Out-Null
+$zipPath = "dist\ffmpeg-$ver-windows-x86_64$nonfree.zip"
+Compress-Archive -Path "$outDir\*" -DestinationPath $zipPath -Force
+
+Write-Host "==> Package written: $zipPath"
