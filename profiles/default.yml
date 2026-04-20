@@ -1,7 +1,7 @@
 name: default
 
 ffmpeg:
-  version: 8.0.1
+  version: 8.1
   enable_ffplay: false
   gpl: true
   nonfree: false         # no fdk-aac, fully redistributable GPL build
