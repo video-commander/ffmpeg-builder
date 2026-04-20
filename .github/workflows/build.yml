@@ -53,8 +53,9 @@ jobs:
       - id: set-matrix
         shell: bash
         run: |
-          # On tag push, build all platforms. On workflow_dispatch, use the selected inputs.
-          BUILD_ALL=${{ github.event_name != 'workflow_dispatch' }}
+          # On tag push, build the default release platforms (macOS arm64 + Windows x86_64).
+          # On workflow_dispatch, use the selected inputs.
+          IS_RELEASE=${{ github.event_name != 'workflow_dispatch' }}
 
           # Resolve FFmpeg version from input or profile
           FFMPEG_VERSION="${{ inputs.ffmpeg_version }}"
@@ -66,16 +67,16 @@ jobs:
           ENTRIES='[]'
           add() { ENTRIES=$(echo "$ENTRIES" | jq -c --argjson e "$1" '. + [$e]'); }
 
-          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.macos_arm64 }}" == "true" ]]; then
+          if [[ "$IS_RELEASE" == "true" ]] || [[ "${{ inputs.macos_arm64 }}" == "true" ]]; then
             add '{"os":"macos-26","arch":"arm64","runner":"macos-26"}'
           fi
-          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.macos_x86_64 }}" == "true" ]]; then
+          if [[ "${{ inputs.macos_x86_64 }}" == "true" ]]; then
             add '{"os":"macos-26-intel","arch":"x86_64","runner":"macos-26-intel"}'
           fi
-          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.linux_x86_64 }}" == "true" ]]; then
+          if [[ "${{ inputs.linux_x86_64 }}" == "true" ]]; then
             add '{"os":"ubuntu-22.04","arch":"x86_64","runner":"ubuntu-22.04"}'
           fi
-          if [[ "$BUILD_ALL" == "true" ]] || [[ "${{ inputs.windows_x86_64 }}" == "true" ]]; then
+          if [[ "$IS_RELEASE" == "true" ]] || [[ "${{ inputs.windows_x86_64 }}" == "true" ]]; then
             add '{"os":"windows-2022","arch":"x86_64","runner":"windows-2022"}'
           fi
 
