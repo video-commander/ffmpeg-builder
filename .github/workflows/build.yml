@@ -70,7 +70,7 @@ jobs:
           if [[ "$IS_RELEASE" == "true" ]] || [[ "${{ inputs.macos_arm64 }}" == "true" ]]; then
             add '{"os":"macos-26","arch":"arm64","runner":"macos-26"}'
           fi
-          if [[ "${{ inputs.macos_x86_64 }}" == "true" ]]; then
+          if [[ "$IS_RELEASE" == "true" ]] || [[ "${{ inputs.macos_x86_64 }}" == "true" ]]; then
             add '{"os":"macos-26-intel","arch":"x86_64","runner":"macos-26-intel"}'
           fi
           if [[ "${{ inputs.linux_x86_64 }}" == "true" ]]; then
