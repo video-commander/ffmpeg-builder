@@ -47,12 +47,21 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      ffmpeg_version: ${{ steps.set-matrix.outputs.ffmpeg_version }}
     steps:
+      - uses: actions/checkout@v4
       - id: set-matrix
         shell: bash
         run: |
           # On tag push, build all platforms. On workflow_dispatch, use the selected inputs.
           BUILD_ALL=${{ github.event_name != 'workflow_dispatch' }}
+
+          # Resolve FFmpeg version from input or profile
+          FFMPEG_VERSION="${{ inputs.ffmpeg_version }}"
+          if [[ -z "$FFMPEG_VERSION" ]]; then
+            FFMPEG_VERSION=$(yq '.ffmpeg.version' profiles/default.yml)
+          fi
+          echo "ffmpeg_version=$FFMPEG_VERSION" >> $GITHUB_OUTPUT
 
           ENTRIES='[]'
           add() { ENTRIES=$(echo "$ENTRIES" | jq -c --argjson e "$1" '. + [$e]'); }
@@ -85,8 +94,7 @@ jobs:
       # Use workflow_dispatch inputs when present, otherwise fall back to defaults
       PROFILE: >-
         ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.profile || 'profiles/default.yml' }}
-      FFMPEG_VERSION: >-
-        ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ffmpeg_version || '' }}
+      FFMPEG_VERSION: ${{ needs.setup.outputs.ffmpeg_version }}
       ENABLE_NONFREE: >-
         ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nonfree || false }}
       CCACHE_DIR: ${{ github.workspace }}/.ccache
@@ -141,8 +149,15 @@ jobs:
 
       - name: Bootstrap toolchain (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./scripts/bootstrap-windows.ps1
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel git nasm yasm cmake ninja zip
+            mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-x264 mingw-w64-x86_64-x265
+            mingw-w64-x86_64-aom mingw-w64-x86_64-opus mingw-w64-x86_64-libvpx
 
       - name: Build FFmpeg (Linux/macOS)
         if: runner.os != 'Windows'
@@ -159,8 +174,8 @@ jobs:
 
       - name: Build FFmpeg (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./scripts/build-ffmpeg.ps1
+        shell: msys2 {0}
+        run: ./scripts/build-ffmpeg-windows.sh
 
       - name: Sign binaries (macOS)
         if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
@@ -179,8 +194,8 @@ jobs:
 
       - name: Package artifacts (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./scripts/package.ps1
+        shell: msys2 {0}
+        run: ./scripts/package-windows.sh
 
       - name: Notarize (macOS)
         if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
