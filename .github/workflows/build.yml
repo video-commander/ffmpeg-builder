@@ -155,7 +155,7 @@ jobs:
           msystem: MINGW64
           update: true
           install: >-
-            base-devel git nasm yasm cmake ninja zip
+            base-devel git nasm yasm cmake ninja zip autoconf automake libtool
             mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkgconf
 
       - name: Build FFmpeg (Linux/macOS)
