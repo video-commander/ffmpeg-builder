@@ -20,6 +20,11 @@ fi
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
+# On MinGW, aom's bundled libwebm uses uint32_t/uint64_t without including
+# <cstdint>, which other toolchains pull in implicitly but MinGW does not.
+EXTRA_CXX_FLAGS=""
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) EXTRA_CXX_FLAGS="-include cstdint" ;; esac
+
 # Configure and build AOM
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
@@ -29,6 +34,7 @@ cmake -G Ninja \
   -DENABLE_DOCS=OFF \
   -DENABLE_EXAMPLES=OFF \
   -DAOM_TARGET_CPU=generic \
+  ${EXTRA_CXX_FLAGS:+-DCMAKE_CXX_FLAGS="$EXTRA_CXX_FLAGS"} \
   ../
 
 ninja -j"$PAR"
