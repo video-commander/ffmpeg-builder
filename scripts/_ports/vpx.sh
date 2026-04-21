@@ -52,13 +52,19 @@ if [[ -z "$SRC_DIR" || ! -d "$SRC_DIR" ]]; then
 fi
 cd "$SRC_DIR"
 
-# Determine the libvpx target — its configure script doesn't auto-detect arm64-darwin
+# Determine the libvpx target — its configure script doesn't reliably
+# auto-detect arm64-darwin or Windows/MSYS2 environments.
 VPX_TARGET_FLAG=()
-if [[ "$(uname)" == "Darwin" ]]; then
-  DARWIN_VER=$(uname -r | cut -d. -f1)
-  ARCH=$(uname -m)
-  VPX_TARGET_FLAG=("--target=${ARCH}-darwin${DARWIN_VER}-gcc")
-fi
+case "$(uname -s)" in
+  Darwin*)
+    DARWIN_VER=$(uname -r | cut -d. -f1)
+    ARCH=$(uname -m)
+    VPX_TARGET_FLAG=("--target=${ARCH}-darwin${DARWIN_VER}-gcc")
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    VPX_TARGET_FLAG=("--target=x86_64-win64-gcc")
+    ;;
+esac
 
 # Configure, build, and install libvpx
 ./configure \

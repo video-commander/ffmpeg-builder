@@ -11,14 +11,30 @@ fi
 
 ver=$("$OUT_DIR/bin/ffmpeg.exe" -version 2>&1 | awk 'NR==1{print $3}')
 
-# Copy required MinGW runtime DLLs (skip Windows system DLLs)
-for bin in "$OUT_DIR/bin/"*.exe; do
-  dlls=$(ldd "$bin" | awk '{print $3}' | grep -i '/mingw64/bin/' || true)
-  [[ -z "$dlls" ]] && continue
-  echo "$dlls" | while read dll; do
-    [[ -f "$dll" ]] && cp -n "$dll" "$OUT_DIR/bin/" && echo "Copied: $(basename "$dll")"
+# Copy required MinGW runtime DLLs (e.g. libgcc, libwinpthread) and their
+# transitive deps. Runs until no new DLLs are added.
+copy_mingw_dlls() {
+  local dir="$1"
+  local changed=1
+  while [[ $changed -eq 1 ]]; do
+    changed=0
+    for bin in "$dir"/*.exe "$dir"/*.dll; do
+      [[ -f "$bin" ]] || continue
+      while IFS= read -r dll; do
+        [[ -z "$dll" || ! -f "$dll" ]] && continue
+        local name
+        name=$(basename "$dll")
+        if [[ ! -f "$dir/$name" ]]; then
+          cp "$dll" "$dir/"
+          echo "Copied: $name"
+          changed=1
+        fi
+      done < <(ldd "$bin" 2>/dev/null | awk '{print $3}' | grep -iE '/mingw64/bin/' || true)
+    done
   done
-done
+}
+
+copy_mingw_dlls "$OUT_DIR/bin"
 
 NONFREE_SUFFIX=""
 [[ "${ENABLE_NONFREE:-false}" == "true" ]] && NONFREE_SUFFIX="-nonfree"

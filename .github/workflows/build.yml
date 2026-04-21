@@ -157,8 +157,6 @@ jobs:
           install: >-
             base-devel git nasm yasm cmake ninja zip
             mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkgconf
-            mingw-w64-x86_64-x264 mingw-w64-x86_64-x265
-            mingw-w64-x86_64-aom mingw-w64-x86_64-opus mingw-w64-x86_64-libvpx
 
       - name: Build FFmpeg (Linux/macOS)
         if: runner.os != 'Windows'
