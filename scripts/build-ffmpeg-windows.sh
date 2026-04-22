@@ -10,14 +10,28 @@ export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig${PKG_CONFI
 
 PAR=$(nproc)
 
-# Build codec ports from source as static libraries so ffmpeg.exe has no
-# runtime DLL dependencies on codec libs.
+# Ensure meson is available (required by vmaf and fribidi ports)
+if ! command -v meson >/dev/null 2>&1; then
+  pip3 install --user meson || true
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Build all codec/library ports from source as static libraries,
+# mirroring the macOS build-ffmpeg.sh feature set.
 pushd "$SCRIPT_DIR/_ports" >/dev/null
-  ./x264.sh "$SRC" "$PREFIX" "$PAR"
-  ./x265.sh "$SRC" "$PREFIX" "$PAR"
-  ./aom.sh  "$SRC" "$PREFIX" "$PAR"
-  ./vpx.sh  "$SRC" "$PREFIX" "$PAR"
-  ./opus.sh "$SRC" "$PREFIX" "$PAR"
+  ./x264.sh   "$SRC" "$PREFIX" "$PAR"
+  ./x265.sh   "$SRC" "$PREFIX" "$PAR"
+  ./aom.sh    "$SRC" "$PREFIX" "$PAR"
+  ./svtav1.sh "$SRC" "$PREFIX" "$PAR"
+  ./vpx.sh    "$SRC" "$PREFIX" "$PAR"
+  ./opus.sh   "$SRC" "$PREFIX" "$PAR"
+  ./openssl.sh "$SRC" "$PREFIX" "$PAR"
+  ./srt.sh    "$SRC" "$PREFIX" "$PAR"
+  ./vmaf.sh   "$SRC" "$PREFIX" "$PAR"
+  ./freetype.sh "$SRC" "$PREFIX" "$PAR"
+  ./fribidi.sh  "$SRC" "$PREFIX" "$PAR"
+  ./harfbuzz.sh "$SRC" "$PREFIX" "$PAR"
+  ./libass.sh   "$SRC" "$PREFIX" "$PAR"
 popd >/dev/null
 
 # Install NVIDIA codec headers (header-only; NVENC/NVDEC load nvidia drivers at runtime)
@@ -28,9 +42,9 @@ make -C "$SRC/nv-codec-headers" install PREFIX="$PREFIX"
 
 # Install AMD AMF headers (header-only; AMF encoder loads AMD drivers at runtime)
 AMF_TAG="v1.4.35"
-AMF_DIR="$SRC/AMF-${AMF_TAG}"
+AMF_VER="${AMF_TAG#v}"
+AMF_DIR="$SRC/AMF-${AMF_VER}"
 if [[ ! -d "$AMF_DIR" ]]; then
-  mkdir -p "$AMF_DIR"
   curl -sL "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/refs/tags/${AMF_TAG}.tar.gz" \
     | tar -xz -C "$SRC"
 fi
@@ -48,10 +62,14 @@ cd "$SRC/ffmpeg"
   --extra-cflags="-I$PREFIX/include" \
   --extra-ldflags="-L$PREFIX/lib -static -static-libgcc -static-libstdc++ -Wl,--start-group" \
   --extra-ldexeflags="-Wl,--end-group" \
+  --extra-libs="-lpthread -lm" \
   --target-os=mingw32 \
   --arch=x86_64 \
   --enable-gpl --enable-version3 \
-  --enable-libx264 --enable-libx265 --enable-libaom --enable-libvpx --enable-libopus \
+  --enable-openssl \
+  --enable-libx264 --enable-libx265 --enable-libaom --enable-libsvtav1 \
+  --enable-libvpx --enable-libopus \
+  --enable-libsrt --enable-libvmaf --enable-libass \
   --enable-d3d11va --enable-dxva2 --enable-mediafoundation \
   --enable-nvenc --enable-nvdec --enable-cuda-llvm \
   --enable-amf \
