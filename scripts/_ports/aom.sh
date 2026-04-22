@@ -7,7 +7,9 @@ PAR="$3"
 
 AOM_VERSION="${PORT_AOM_VERSION:-v3.9.0}"
 SRC_DIR="$SRC/aom"
-BUILD_DIR="$SRC_DIR/build"
+# aom's repo contains source cmake helpers at build/cmake/ so we must use a
+# different name to avoid clobbering them when we rm -rf the build directory.
+BUILD_DIR="$SRC_DIR/build-ffmpeg-builder"
 
 mkdir -p "$SRC"
 

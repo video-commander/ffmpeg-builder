@@ -7,7 +7,7 @@ PAR="$3"
 
 SVTAV1_VERSION="${PORT_SVTAV1_VERSION:-v2.2.1}"
 SRC_DIR="$SRC/SVT-AV1"
-BUILD_DIR="$SRC_DIR/build"
+BUILD_DIR="$SRC_DIR/build-ffmpeg-builder"
 
 mkdir -p "$SRC"
 
