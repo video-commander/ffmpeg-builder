@@ -41,15 +41,11 @@ fi
 make -C "$SRC/nv-codec-headers" install PREFIX="$PREFIX"
 
 # Install AMD AMF headers (header-only; AMF encoder loads AMD drivers at runtime)
-AMF_TAG="v1.4.35"
-AMF_VER="${AMF_TAG#v}"
-AMF_DIR="$SRC/AMF-${AMF_VER}"
-if [[ ! -d "$AMF_DIR" ]]; then
-  curl -sL "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/refs/tags/${AMF_TAG}.tar.gz" \
-    | tar -xz -C "$SRC"
+if [[ ! -d "$SRC/AMF" ]]; then
+  git clone --depth=1 https://github.com/GPUOpen-LibrariesAndSDKs/AMF "$SRC/AMF"
 fi
 mkdir -p "$PREFIX/include/AMF"
-cp -r "$AMF_DIR/amf/public/include/." "$PREFIX/include/AMF/"
+cp -r "$SRC/AMF/amf/public/include/." "$PREFIX/include/AMF/"
 
 wget -q "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz" -O "$SRC/ffmpeg.tar.gz"
 mkdir -p "$SRC/ffmpeg" && tar -C "$SRC/ffmpeg" --strip-components=1 -xzf "$SRC/ffmpeg.tar.gz"
