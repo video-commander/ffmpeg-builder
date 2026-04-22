@@ -72,12 +72,20 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-# Configure extra flags for macOS (assembly causes linker issues with Xcode 26+)
+# Configure extra flags per platform
 EXTRA_X265_FLAGS=()
-if [[ "$(uname -s)" == "Darwin" ]]; then
-  EXTRA_X265_FLAGS+=(-DENABLE_ASSEMBLY=OFF)
-  [[ "$(uname -m)" == "arm64" ]] && EXTRA_X265_FLAGS+=(-DENABLE_NEON=OFF)
-fi
+case "$(uname -s)" in
+  Darwin*)
+    # Assembly causes linker issues with Xcode 26+
+    EXTRA_X265_FLAGS+=(-DENABLE_ASSEMBLY=OFF)
+    [[ "$(uname -m)" == "arm64" ]] && EXTRA_X265_FLAGS+=(-DENABLE_NEON=OFF)
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    # cmake 4.x try-compile is broken on MSYS2/MINGW64; skip the check since
+    # we know gcc works (x264 already compiled successfully before this step)
+    EXTRA_X265_FLAGS+=(-DCMAKE_C_COMPILER_WORKS=1 -DCMAKE_CXX_COMPILER_WORKS=1)
+    ;;
+esac
 
 # Configure and build
 cmake -G Ninja \
