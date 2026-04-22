@@ -46,3 +46,9 @@ cmake -G Ninja \
 
 ninja -j"$PAR"
 ninja install
+
+# cmake names the static target libzlibstatic.a; rename to libz.a so the linker
+# finds it when pkg-config returns -lz, and remove the shared lib to prevent the
+# linker from preferring the DLL import lib over the static archive.
+mv "$PREFIX/lib/libzlibstatic.a" "$PREFIX/lib/libz.a"
+rm -f "$PREFIX/lib/libzlib.dll.a" "$PREFIX/bin/libzlib.dll"

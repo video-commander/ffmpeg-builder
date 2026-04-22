@@ -37,6 +37,9 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
+# canonical_zos.h uses (int)(long)& casts that trigger -Wpointer-to-int-cast as
+# an error on GCC 15; suppress the warning so the build doesn't fail.
+CFLAGS="-Wno-pointer-to-int-cast" \
 "$SRC/$TOPDIR/configure" \
   --prefix="$PREFIX" \
   --enable-extra-encodings \
