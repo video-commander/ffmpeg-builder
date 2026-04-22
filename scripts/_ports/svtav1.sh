@@ -16,6 +16,7 @@ if [[ ! -d "$SRC_DIR" ]]; then
   git clone --branch "$SVTAV1_VERSION" --depth=1 https://gitlab.com/AOMediaCodec/SVT-AV1.git "$SRC_DIR"
 fi
 
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 

@@ -16,7 +16,10 @@ if [[ ! -d "$SRC_DIR" ]]; then
   git clone --branch "$AOM_VERSION" --depth=1 https://aomedia.googlesource.com/aom "$SRC_DIR"
 fi
 
-# Create and enter the build directory
+# Always start with a clean build directory so stale CMakeCache.txt
+# entries (e.g. from a restored CI cache with different cmake paths) don't
+# cause a path mismatch error.
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
