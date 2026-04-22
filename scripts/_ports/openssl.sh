@@ -29,11 +29,25 @@ fi
 
 cd "$SRC/$TOPDIR"
 
-./config \
-  --prefix="$PREFIX" \
-  --openssldir="$PREFIX/ssl" \
-  no-shared \
-  no-tests
+# On MSYS2/MinGW, ./config misdetects the target; use explicit mingw64 target.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    ./Configure mingw64 \
+      --prefix="$PREFIX" \
+      --libdir=lib \
+      --openssldir="$PREFIX/ssl" \
+      no-shared \
+      no-tests \
+      no-apps
+    ;;
+  *)
+    ./config \
+      --prefix="$PREFIX" \
+      --openssldir="$PREFIX/ssl" \
+      no-shared \
+      no-tests
+    ;;
+esac
 
 make -j"$PAR"
 make install_sw

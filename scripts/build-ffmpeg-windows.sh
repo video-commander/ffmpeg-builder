@@ -19,15 +19,20 @@ fi
 # Build all codec/library ports from source as static libraries,
 # mirroring the macOS build-ffmpeg.sh feature set.
 pushd "$SCRIPT_DIR/_ports" >/dev/null
-  ./x264.sh   "$SRC" "$PREFIX" "$PAR"
-  ./x265.sh   "$SRC" "$PREFIX" "$PAR"
-  ./aom.sh    "$SRC" "$PREFIX" "$PAR"
-  ./svtav1.sh "$SRC" "$PREFIX" "$PAR"
-  ./vpx.sh    "$SRC" "$PREFIX" "$PAR"
-  ./opus.sh   "$SRC" "$PREFIX" "$PAR"
-  ./openssl.sh "$SRC" "$PREFIX" "$PAR"
-  ./srt.sh    "$SRC" "$PREFIX" "$PAR"
-  ./vmaf.sh   "$SRC" "$PREFIX" "$PAR"
+  # Foundation libs first (others depend on these)
+  ./zlib.sh     "$SRC" "$PREFIX" "$PAR"
+  ./libiconv.sh "$SRC" "$PREFIX" "$PAR"
+  ./xz.sh       "$SRC" "$PREFIX" "$PAR"
+  # Codec and feature libraries
+  ./x264.sh     "$SRC" "$PREFIX" "$PAR"
+  ./x265.sh     "$SRC" "$PREFIX" "$PAR"
+  ./aom.sh      "$SRC" "$PREFIX" "$PAR"
+  ./svtav1.sh   "$SRC" "$PREFIX" "$PAR"
+  ./vpx.sh      "$SRC" "$PREFIX" "$PAR"
+  ./opus.sh     "$SRC" "$PREFIX" "$PAR"
+  ./openssl.sh  "$SRC" "$PREFIX" "$PAR"
+  ./srt.sh      "$SRC" "$PREFIX" "$PAR"
+  ./vmaf.sh     "$SRC" "$PREFIX" "$PAR"
   ./freetype.sh "$SRC" "$PREFIX" "$PAR"
   ./fribidi.sh  "$SRC" "$PREFIX" "$PAR"
   ./harfbuzz.sh "$SRC" "$PREFIX" "$PAR"
@@ -56,13 +61,16 @@ cd "$SRC/ffmpeg"
   --pkg-config=pkg-config \
   --pkg-config-flags="--static" \
   --extra-cflags="-I$PREFIX/include" \
-  --extra-ldflags="-L$PREFIX/lib -Wl,--start-group" \
+  --extra-ldflags="-L$PREFIX/lib -static-libgcc -static-libstdc++ -Wl,--allow-multiple-definition -Wl,--start-group" \
   --extra-ldexeflags="-Wl,--end-group" \
-  --extra-libs="-lpthread -lm" \
+  --extra-libs="-Wl,-Bstatic -lwinpthread -Wl,-Bdynamic -lm" \
   --target-os=mingw32 \
   --arch=x86_64 \
   --enable-gpl --enable-version3 \
   --enable-openssl \
+  --enable-zlib --enable-lzma --enable-iconv \
+  --disable-bzlib \
+  --disable-w32threads --enable-pthreads \
   --enable-libx264 --enable-libx265 --enable-libaom --enable-libsvtav1 \
   --enable-libvpx --enable-libopus \
   --enable-libsrt --enable-libvmaf --enable-libass \
