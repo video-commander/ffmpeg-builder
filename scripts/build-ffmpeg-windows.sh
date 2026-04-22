@@ -67,7 +67,7 @@ cd "$SRC/ffmpeg"
   --enable-libvpx --enable-libopus \
   --enable-libsrt --enable-libvmaf --enable-libass \
   --enable-d3d11va --enable-dxva2 --enable-mediafoundation \
-  --enable-nvenc --enable-nvdec --enable-cuda-llvm \
+  --enable-nvenc --enable-nvdec \
   --enable-amf \
   --disable-doc --disable-debug --enable-stripping --enable-static --disable-shared \
   $( [[ "${ENABLE_NONFREE:-false}" == "true" ]] && echo --enable-nonfree )
