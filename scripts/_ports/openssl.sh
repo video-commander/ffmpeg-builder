@@ -22,7 +22,7 @@ if ! tar -tf "$SRC/$TARBALL" >/dev/null 2>&1; then
   exit 1
 fi
 
-TOPDIR=$(tar -tf "$SRC/$TARBALL" | head -n1 | cut -d/ -f1)
+TOPDIR=$(tar -tf "$SRC/$TARBALL" | head -n1 | cut -d/ -f1 || true)
 if [[ ! -d "$SRC/$TOPDIR" ]]; then
   tar -xf "$SRC/$TARBALL" -C "$SRC"
 fi

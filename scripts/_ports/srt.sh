@@ -29,7 +29,7 @@ if ! tar -tf "$SRC/$TARBALL" >/dev/null 2>&1; then
 fi
 
 # Extract the tarball if the source directory does not already exist
-TOPDIR=$(tar -tf "$SRC/$TARBALL" | head -n1 | cut -d/ -f1)
+TOPDIR=$(tar -tf "$SRC/$TARBALL" | head -n1 | cut -d/ -f1 || true)
 if [[ -z "$TOPDIR" ]]; then
   echo "ERROR: failed to detect top-level directory inside $TARBALL" >&2
   exit 1
