@@ -25,9 +25,12 @@ if ! tar -tf "$SRC/$TARBALL" >/dev/null 2>&1; then
   exit 1
 fi
 
-# Extract the source if not already extracted
+# Extract the source if not already extracted.
+# || true: harfbuzz tarball contains a README symlink that fails on Windows
+# (symlink creation requires elevated privileges); the actual source files
+# are extracted successfully and that's all we need.
 if ! find "$SRC" -maxdepth 1 -type d -name "harfbuzz-*${HARFBUZZ_VERSION}*" | grep -q .; then
-  tar -xf "$SRC/$TARBALL" -C "$SRC"
+  tar -xf "$SRC/$TARBALL" -C "$SRC" || true
 fi
 
 # Locate the source directory
