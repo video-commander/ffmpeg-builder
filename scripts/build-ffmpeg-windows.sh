@@ -61,8 +61,8 @@ cd "$SRC/ffmpeg"
   --pkg-config=pkg-config \
   --pkg-config-flags="--static" \
   --extra-cflags="-I$PREFIX/include" \
-  --extra-ldflags="-L$PREFIX/lib -Wl,-Bstatic,-lgcc_eh,-lgcc -Wl,--allow-multiple-definition -static-libgcc -static-libstdc++ -Wl,--start-group" \
-  --extra-ldexeflags="-Wl,--end-group -Wl,-Bdynamic" \
+  --extra-ldflags="-L$PREFIX/lib -static -static-libgcc -static-libstdc++ -Wl,--start-group" \
+  --extra-ldexeflags="-Wl,--end-group" \
   --extra-libs="-lm" \
   --target-os=mingw32 \
   --arch=x86_64 \
