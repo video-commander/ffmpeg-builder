@@ -37,9 +37,10 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-# canonical_zos.h uses (int)(long)& casts that trigger -Wpointer-to-int-cast as
-# an error on GCC 15; suppress the warning so the build doesn't fail.
-CFLAGS="-Wno-pointer-to-int-cast" \
+# libiconv 1.17 uses old-style K&R empty-parens declarations (e.g. mbrtowc())
+# and pointer-to-int casts that are errors under GCC 15's default C23 mode.
+# Force C17 semantics to restore the old behaviour.
+CFLAGS="-std=gnu17" \
 "$SRC/$TOPDIR/configure" \
   --prefix="$PREFIX" \
   --enable-extra-encodings \
