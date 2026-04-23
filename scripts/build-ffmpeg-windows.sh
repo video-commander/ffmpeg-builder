@@ -52,6 +52,12 @@ fi
 mkdir -p "$PREFIX/include/AMF"
 cp -r "$SRC/AMF/amf/public/include/." "$PREFIX/include/AMF/"
 
+# GCC 15's MinGW spec unconditionally adds -lgcc_s alongside -lgcc_eh regardless
+# of -static or -static-libgcc. Shadow it with an empty archive in PREFIX so the
+# spec's -lgcc_s lookup is satisfied with no symbols, letting -static-libgcc link
+# the real libgcc_eh.a without a duplicate _Unwind_Resume conflict.
+ar rcs "$PREFIX/lib/libgcc_s.a"
+
 wget -q "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz" -O "$SRC/ffmpeg.tar.gz"
 mkdir -p "$SRC/ffmpeg" && tar -C "$SRC/ffmpeg" --strip-components=1 -xzf "$SRC/ffmpeg.tar.gz"
 cd "$SRC/ffmpeg"
