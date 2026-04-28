@@ -56,11 +56,14 @@ BUILD_DIR="$LIBVMAF_SRC/build-ffmpeg-builder"
 rm -rf "$BUILD_DIR"
 
 # Configure, build, and install libvmaf
+# built_in_models embeds the model data into the static library so no external
+# model files are needed at runtime — required for a fully static binary.
 meson setup "$BUILD_DIR" "$LIBVMAF_SRC" \
   --prefix "$PREFIX" \
   --libdir lib \
   --buildtype release \
-  --default-library=static
+  --default-library=static \
+  -Dbuilt_in_models=true
 
 ninja -C "$BUILD_DIR" -j"$PAR"
 ninja -C "$BUILD_DIR" install
