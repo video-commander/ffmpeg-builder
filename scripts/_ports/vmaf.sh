@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shared helpers (fetch_url: retries transient download failures)
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/util.sh"
+
 SRC="$1"
 PREFIX="$2"
 PAR="$3"
@@ -19,7 +22,7 @@ TARBALL="${TAG}.tar.gz"
 URL="https://github.com/Netflix/vmaf/archive/refs/tags/${TARBALL}"
 
 if [[ ! -f "$SRC/$TARBALL" ]]; then
-  curl -L "$URL" -o "$SRC/$TARBALL"
+  fetch_url "$URL" "$SRC/$TARBALL"
 fi
 
 # Verify that the tarball is valid

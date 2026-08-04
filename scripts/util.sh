@@ -22,6 +22,34 @@ err() {
 }
 
 # -------------------------------------------------------------
+# Download a single file
+# -------------------------------------------------------------
+# fetch_url <url> <output-path>
+#
+# ffmpeg.org and the GitHub release CDN both reset connections under load, and
+# a bare `curl -L` turns one dropped packet into a failed build that is already
+# many minutes deep. Retry transient failures instead.
+#
+# --retry-all-errors is the flag that matters: plain --retry only covers
+# transient *HTTP* statuses, not connection resets (curl exit 35/56).
+# -f makes an HTTP error a non-zero exit rather than silently writing the
+# error page into the tarball, where it would surface later as a confusing
+# "not in gzip format" from tar.
+# -------------------------------------------------------------
+
+fetch_url() {
+  local url="$1"
+  local out="$2"
+
+  curl -fL \
+    --retry 5 \
+    --retry-all-errors \
+    --retry-max-time 120 \
+    --connect-timeout 30 \
+    -o "$out" "$url"
+}
+
+# -------------------------------------------------------------
 # Fetch & extract source trees
 # -------------------------------------------------------------
 # fetch_src <folder-name> <url> <dest>
@@ -49,7 +77,7 @@ fetch_src() {
   local tmp
   tmp=$(mktemp -d)
 
-  curl -L "$url" -o "$tmp/src.tar.gz"
+  fetch_url "$url" "$tmp/src.tar.gz"
 
   # Detect top-level directory in the tarball
   local top
