@@ -29,9 +29,15 @@ fi
 
 cd "$SRC/$TOPDIR"
 
+# openssldir is baked into libcrypto and is what SSL_CTX_set_default_verify_paths()
+# resolves at runtime on the *user's* machine, not ours — so it must not point into
+# the build tree. FFmpeg 9.0 turned on TLS peer verification by default, so a dead
+# CA path here breaks every https/tls/rtmps input in the shipped binary.
+# /etc/ssl covers macOS (cert.pem) and Linux (certs/); SSL_CERT_FILE still overrides.
+# install_sw skips installing into openssldir, so nothing is written to /etc.
 ./config \
   --prefix="$PREFIX" \
-  --openssldir="$PREFIX/ssl" \
+  --openssldir=/etc/ssl \
   no-shared \
   no-tests
 
