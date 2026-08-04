@@ -53,7 +53,7 @@ jobs:
       - id: set-matrix
         shell: bash
         run: |
-          # On tag push, build the default release platforms (macOS arm64 + Windows x86_64).
+          # On tag push, build the release platforms (macOS arm64 + macOS x86_64).
           # On workflow_dispatch, use the selected inputs.
           IS_RELEASE=${{ github.event_name != 'workflow_dispatch' }}
 
@@ -76,7 +76,12 @@ jobs:
           if [[ "${{ inputs.linux_x86_64 }}" == "true" ]]; then
             add '{"os":"ubuntu-22.04","arch":"x86_64","runner":"ubuntu-22.04"}'
           fi
-          if [[ "$IS_RELEASE" == "true" ]] || [[ "${{ inputs.windows_x86_64 }}" == "true" ]]; then
+          # Windows is dispatch-only, not a release platform. The build on main
+          # links MSYS2 prebuilt codecs and omits libass/libvmaf/libsrt/openssl,
+          # so it is not feature-equivalent to the macOS artifacts it would ship
+          # alongside under the same version tag. Restore the IS_RELEASE clause
+          # once fix/windows-static-codecs lands.
+          if [[ "${{ inputs.windows_x86_64 }}" == "true" ]]; then
             add '{"os":"windows-2022","arch":"x86_64","runner":"windows-2022"}'
           fi
 
