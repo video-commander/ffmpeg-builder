@@ -20,19 +20,29 @@ PARALLEL=${PARALLEL:-$(yq '.system.parallel' "$PROFILE_FILE")}
 
 # Resolve per-port versions (with env override + profile fallback)
 PORT_X264_VERSION=$(port_version x264 "stable")
-PORT_X265_VERSION=$(port_version x265 "3.6")
-PORT_AOM_VERSION=$(port_version aom "v3.9.0")
-PORT_SVTAV1_VERSION=$(port_version svtav1 "v2.2.1")
-PORT_VPX_VERSION=$(port_version vpx "v1.16.0")
-PORT_OPUS_VERSION=$(port_version opus "v1.5.1")
-PORT_OPENSSL_VERSION=$(port_version openssl "3.3.2")
-PORT_SRT_VERSION=$(port_version srt "v1.5.4")
-PORT_VMAF_VERSION=$(port_version vmaf "v3.0.0")
-PORT_LIBASS_VERSION=$(port_version libass "0.17.3")
+PORT_X265_VERSION=$(port_version x265 "4.2")
+PORT_AOM_VERSION=$(port_version aom "v3.15.0")
+PORT_SVTAV1_VERSION=$(port_version svtav1 "v4.2.0")
+PORT_VPX_VERSION=$(port_version vpx "v1.17.0")
+PORT_OPUS_VERSION=$(port_version opus "v1.5.2")
+# OpenSSL 3.5 is the current LTS line. 4.x is released but is not what FFmpeg
+# 9.x is tested against upstream.
+PORT_OPENSSL_VERSION=$(port_version openssl "3.5.8")
+PORT_SRT_VERSION=$(port_version srt "v1.5.7")
+PORT_VMAF_VERSION=$(port_version vmaf "v3.2.0")
+PORT_LIBASS_VERSION=$(port_version libass "0.17.5")
+PORT_FREETYPE_VERSION=$(port_version freetype "VER-2-14-3")
+PORT_FRIBIDI_VERSION=$(port_version fribidi "v1.0.16")
+PORT_HARFBUZZ_VERSION=$(port_version harfbuzz "14.4.0")
+PORT_ZIMG_VERSION=$(port_version zimg "release-3.0.6")
+PORT_DAV1D_VERSION=$(port_version dav1d "1.5.4")
+PORT_LAME_VERSION=$(port_version lame "4.0")
 
 export PORT_X264_VERSION PORT_X265_VERSION PORT_AOM_VERSION \
        PORT_SVTAV1_VERSION PORT_VPX_VERSION PORT_OPUS_VERSION \
-       PORT_OPENSSL_VERSION PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION
+       PORT_OPENSSL_VERSION PORT_SRT_VERSION PORT_VMAF_VERSION PORT_LIBASS_VERSION \
+       PORT_FREETYPE_VERSION PORT_FRIBIDI_VERSION PORT_HARFBUZZ_VERSION \
+       PORT_ZIMG_VERSION PORT_DAV1D_VERSION PORT_LAME_VERSION
 
 
 # -------------------------------------------------------------
@@ -58,7 +68,7 @@ get_toggle(){
 }
 
 # Materialize all toggles as ENABLE_*
-for k in x264 x265 aom svtav1 vpx opus fdk_aac ass vmaf srt; do
+for k in x264 x265 aom svtav1 vpx opus fdk_aac ass vmaf srt zimg dav1d lame; do
   upper=$(printf '%s' "$k" | tr '[:lower:]' '[:upper:]')
   eval "ENABLE_${upper}=$(get_toggle "$k")"
 done
@@ -90,6 +100,9 @@ pushd "$SCRIPT_DIR/_ports" >/dev/null
     ./libass.sh   "$SRC" "$PREFIX" "$PARALLEL"
   fi
   [[ "$ENABLE_VMAF" =~ ^(true|1)$ ]] && ./vmaf.sh "$SRC" "$PREFIX" "$PARALLEL"
+  [[ "$ENABLE_ZIMG"  =~ ^(true|1)$ ]] && ./zimg.sh  "$SRC" "$PREFIX" "$PARALLEL"
+  [[ "$ENABLE_DAV1D" =~ ^(true|1)$ ]] && ./dav1d.sh "$SRC" "$PREFIX" "$PARALLEL"
+  [[ "$ENABLE_LAME"  =~ ^(true|1)$ ]] && ./lame.sh  "$SRC" "$PREFIX" "$PARALLEL"
   ./openssl.sh "$SRC" "$PREFIX" "$PARALLEL"
   [[ "$ENABLE_SRT"  =~ ^(true|1)$ ]] && ./srt.sh  "$SRC" "$PREFIX" "$PARALLEL"
 popd >/dev/null
@@ -130,9 +143,15 @@ CONFIG_FLAGS=(
 [[ "$ENABLE_VPX"    =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libvpx)
 [[ "$ENABLE_OPUS"   =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libopus)
 [[ "$ENABLE_FDK_AAC" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libfdk-aac)
-[[ "$ENABLE_ASS"    =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libass)
+# freetype and harfbuzz are built as libass dependencies; exposing them to
+# FFmpeg as well is what enables the drawtext filter. Fonts resolve by path
+# (fontfile=) only — naming a font (font=) additionally needs fontconfig.
+[[ "$ENABLE_ASS"    =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libass --enable-libfreetype --enable-libharfbuzz)
 [[ "$ENABLE_VMAF"   =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libvmaf)
 [[ "$ENABLE_SRT"    =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libsrt)
+[[ "$ENABLE_ZIMG"   =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libzimg)
+[[ "$ENABLE_DAV1D"  =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libdav1d)
+[[ "$ENABLE_LAME"   =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-libmp3lame)
 
 # FFplay
 ENABLE_FFPLAY=${ENABLE_FFPLAY:-$(yq '.ffmpeg.enable_ffplay' "$PROFILE_FILE")}

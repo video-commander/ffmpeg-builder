@@ -8,7 +8,7 @@ SRC="$1"
 PREFIX="$2"
 PAR="$3"
 
-OPUS_VERSION="${PORT_OPUS_VERSION:-v1.5.1}"
+OPUS_VERSION="${PORT_OPUS_VERSION:-v1.5.2}"
 TARBALL="opus-${OPUS_VERSION}.tar.gz"
 URL="https://github.com/xiph/opus/archive/refs/tags/${OPUS_VERSION}.tar.gz"
 

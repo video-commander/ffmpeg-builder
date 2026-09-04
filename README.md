@@ -8,7 +8,9 @@ A cross‑platform CI project that builds **portable FFmpeg binaries** (and opti
 
 Supports popular codecs via source builds by default:
 
-- **x264**, **x265**, **SVT‑AV1**, **AOM‑AV1**, **Opus**, **fdk‑aac** (nonfree, opt‑in), **libvpx** (VP8/VP9)
+- **x264**, **x265**, **SVT‑AV1**, **AOM‑AV1**, **dav1d** (AV1 decode), **libvpx** (VP8/VP9)
+- **Opus**, **LAME** (MP3), **fdk‑aac** (nonfree, opt‑in)
+- **zimg** (zscale: colour space, transfer, tone mapping), **libvmaf**, **libass** + **drawtext**, **libsrt**
 - Easily extendable (OpenH264, libvmaf, libass, etc.)
 
 ---
@@ -123,6 +125,29 @@ PORT_X265_VERSION=3.5 ./scripts/build-ffmpeg.sh
 ## Nonfree Builds
 
 Nonfree builds cannot be redistributed.
+
+A tag push always builds `profiles/default.yml` — the profile input is only
+read on `workflow_dispatch` — and only the tag path reaches the release job, so
+a nonfree artifact cannot be published by the workflow. Dispatch-built nonfree
+archives carry a `-nonfree` suffix and stay attached to the run.
+
+## Licensing of the published archives
+
+The release archives are FFmpeg built `--enable-gpl --enable-version3` and
+statically linked against GPL libraries (x264, x265), so they are conveyed
+under the GPL v3. Two things satisfy that, both automatic:
+
+- `collect_licenses` copies every linked library's license text into
+  `LICENSES/` inside each archive, alongside `configure-flags.txt`.
+- `scripts/source-offer.sh` renders the corresponding-source table — component,
+  pinned version, license, upstream URL — from the profile on the tagged tree,
+  and the release job puts it in the release body.
+
+Run it locally to preview what a release will say:
+
+```bash
+./scripts/source-offer.sh profiles/default.yml
+```
 
 ---
 

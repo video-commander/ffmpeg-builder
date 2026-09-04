@@ -226,7 +226,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ffmpeg-${{ matrix.os }}-${{ matrix.arch }}${{ env.ENABLE_NONFREE == 'true' && '-nonfree' || '' }}
-          path: dist/*.zip
+          path: |
+            dist/*.zip
+            dist/*.zip.sha256
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -235,10 +237,20 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: ./dist
+      # The released archives are GPL binaries, so the body has to point at the
+      # corresponding source. Rendered from the profile on the tagged tree, so
+      # the versions listed are the versions built.
+      - name: Compose source offer
+        shell: bash
+        run: ./scripts/source-offer.sh profiles/default.yml > RELEASE_NOTES.md
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/**/**.zip
+          body_path: RELEASE_NOTES.md
+          files: |
+            dist/**/**.zip
+            dist/**/**.zip.sha256
           generate_release_notes: true

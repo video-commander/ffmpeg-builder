@@ -13,7 +13,7 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-FRIBIDI_VERSION="${PORT_FRIBIDI_VERSION:-v1.0.13}"
+FRIBIDI_VERSION="${PORT_FRIBIDI_VERSION:-v1.0.16}"
 TARBALL="fribidi-${FRIBIDI_VERSION}.tar.gz"
 URL="https://github.com/fribidi/fribidi/archive/refs/tags/${FRIBIDI_VERSION}.tar.gz"
 

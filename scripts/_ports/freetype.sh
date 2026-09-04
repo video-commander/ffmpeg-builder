@@ -13,7 +13,7 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-FREETYPE_VERSION="${PORT_FREETYPE_VERSION:-VER-2-13-2}"
+FREETYPE_VERSION="${PORT_FREETYPE_VERSION:-VER-2-14-3}"
 TARBALL="freetype-${FREETYPE_VERSION}.tar.gz"
 URL="https://github.com/freetype/freetype/archive/refs/tags/${FREETYPE_VERSION}.tar.gz"
 

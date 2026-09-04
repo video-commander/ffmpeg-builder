@@ -1,6 +1,6 @@
 name: video-commander
 ffmpeg:
-  version: 9.0
+  version: 9.0.1
   enable_ffplay: false
   gpl: true
   nonfree: false   # flip to true when enabling fdk-aac
@@ -11,9 +11,12 @@ codecs:
   aom:    true     # AV1 (libaom)
   svtav1: true     # AV1 (SVT-AV1, faster)
   vpx:    true     # VP9
+  dav1d:  true     # AV1 decode
   opus:   true
+  lame:   true     # MP3 encode
   fdk_aac: false   # opt-in (nonfree)
-  ass:    true     # libass (subtitles)
+  ass:    true     # libass (subtitles) + drawtext
+  zimg:   true     # zscale (tone mapping, colour conversion)
   vmaf:   true     # libvmaf (quality metrics)
   srt:    false    # libsrt (networking) — enable if you need it
 system:
