@@ -8,7 +8,7 @@ SRC="$1"
 PREFIX="$2"
 PAR="$3"
 
-VPX_VERSION="${PORT_VPX_VERSION:-v1.16.0}"
+VPX_VERSION="${PORT_VPX_VERSION:-v1.17.0}"
 TARBALL="libvpx-${VPX_VERSION}.tar.gz"
 URL="https://github.com/webmproject/libvpx/archive/refs/tags/${VPX_VERSION}.tar.gz"
 

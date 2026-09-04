@@ -8,7 +8,7 @@ SRC="$1"
 PREFIX="$2"
 PAR="$3"
 
-X265_VERSION="${PORT_X265_VERSION:-3.6}"
+X265_VERSION="${PORT_X265_VERSION:-4.2}"
 TARBALL="x265_${X265_VERSION}.tar.gz"
 URL="https://bitbucket.org/multicoreware/x265_git/downloads/${TARBALL}"
 

@@ -1,7 +1,7 @@
 name: full
 
 ffmpeg:
-  version: 9.0
+  version: 9.0.1
   enable_ffplay: false
   gpl: true
   nonfree: true
@@ -13,9 +13,12 @@ codecs:
   aom:    true
   svtav1: true
   vpx:    true
+  dav1d:  true
   opus:   true
+  lame:   true
   fdk_aac: true # non-free codec
   ass:    true
+  zimg:   true
   vmaf:   true
   srt:    true
 
@@ -26,20 +29,34 @@ ports:
   x264:
     version: "stable"
   x265:
-    version: "3.6"
+    version: "4.2"
   aom:
-    version: "v3.9.0"
+    version: "v3.15.0"
   svtav1:
-    version: "v2.2.1"
+    version: "v4.2.0"
   vpx:
-    version: "v1.16.0"
+    version: "v1.17.0"
+  dav1d:
+    version: "1.5.4"
   opus:
-    version: "v1.5.1"
+    version: "v1.5.2"
+  lame:
+    version: "4.0"
+  openssl:
+    version: "3.5.8"
   srt:
-    version: "v1.5.4"
+    version: "v1.5.7"
   vmaf:
-    version: "v3.0.0"
+    version: "v3.2.0"
   libass:
-    version: "0.17.3"
+    version: "0.17.5"
+  freetype:
+    version: "VER-2-14-3"
+  fribidi:
+    version: "v1.0.16"
+  harfbuzz:
+    version: "14.4.0"
+  zimg:
+    version: "release-3.0.6"
   fdk_aac:
     version: "v2.0.3"

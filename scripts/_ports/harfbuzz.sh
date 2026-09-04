@@ -13,7 +13,7 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-HARFBUZZ_VERSION="${PORT_HARFBUZZ_VERSION:-8.3.1}"
+HARFBUZZ_VERSION="${PORT_HARFBUZZ_VERSION:-14.4.0}"
 TARBALL="harfbuzz-${HARFBUZZ_VERSION}.tar.gz"
 URL="https://github.com/harfbuzz/harfbuzz/archive/refs/tags/${HARFBUZZ_VERSION}.tar.gz"
 

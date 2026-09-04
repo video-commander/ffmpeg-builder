@@ -13,7 +13,7 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-LIBASS_VERSION="${PORT_LIBASS_VERSION:-0.17.3}"
+LIBASS_VERSION="${PORT_LIBASS_VERSION:-0.17.5}"
 TARBALL="libass-${LIBASS_VERSION}.tar.gz"
 URL="https://github.com/libass/libass/archive/refs/tags/${LIBASS_VERSION}.tar.gz"
 

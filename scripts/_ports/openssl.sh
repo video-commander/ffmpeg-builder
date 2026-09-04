@@ -12,7 +12,7 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-OPENSSL_VERSION="${PORT_OPENSSL_VERSION:-3.3.2}"
+OPENSSL_VERSION="${PORT_OPENSSL_VERSION:-3.5.8}"
 TARBALL="openssl-${OPENSSL_VERSION}.tar.gz"
 URL="https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/${TARBALL}"
 

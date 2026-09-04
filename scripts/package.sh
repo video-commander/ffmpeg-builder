@@ -40,4 +40,14 @@ echo "==> Packaging $out -> $zip_path"
   zip -r "$zip_path" "$triplet"
 )
 
+# Sidecar digest: the consuming installer pins each archive by SHA-256, and
+# computing it here means the release carries it rather than the maintainer
+# running shasum by hand.
+if command -v shasum >/dev/null; then
+  ( cd "$ROOT_DIR/dist" && shasum -a 256 "$(basename "$zip_path")" > "$(basename "$zip_path").sha256" )
+else
+  ( cd "$ROOT_DIR/dist" && sha256sum "$(basename "$zip_path")" > "$(basename "$zip_path").sha256" )
+fi
+
 echo "==> Package written: $zip_path"
+echo "==> Digest written:  $zip_path.sha256"

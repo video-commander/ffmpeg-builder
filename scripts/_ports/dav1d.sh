@@ -13,14 +13,11 @@ mkdir -p "$SRC" "$PREFIX"
 SRC="$(cd "$SRC" && pwd)"
 PREFIX="$(cd "$PREFIX" && pwd)"
 
-RAW_SRT_VERSION="${PORT_SRT_VERSION:-1.5.7}"
-SRT_VERSION_NO_V="${RAW_SRT_VERSION#v}"
-TAG="v${SRT_VERSION_NO_V}"
+RAW_DAV1D_VERSION="${PORT_DAV1D_VERSION:-1.5.4}"
+DAV1D_VERSION="${RAW_DAV1D_VERSION#v}"
+TARBALL="dav1d-${DAV1D_VERSION}.tar.gz"
+URL="https://github.com/videolan/dav1d/archive/refs/tags/${DAV1D_VERSION}.tar.gz"
 
-TARBALL="${TAG}.tar.gz"
-URL="https://github.com/Haivision/srt/archive/refs/tags/${TARBALL}"
-
-# Download SRT source code tarball if not already present
 if [[ ! -f "$SRC/$TARBALL" ]]; then
   fetch_url "$URL" "$SRC/$TARBALL"
 fi
@@ -31,7 +28,6 @@ if ! tar -tf "$SRC/$TARBALL" >/dev/null 2>&1; then
   exit 1
 fi
 
-# Extract the tarball if the source directory does not already exist
 TOPDIR=$(tar -tf "$SRC/$TARBALL" | head -n1 | cut -d/ -f1)
 if [[ -z "$TOPDIR" ]]; then
   echo "ERROR: failed to detect top-level directory inside $TARBALL" >&2
@@ -44,22 +40,21 @@ fi
 
 SRC_DIR="$SRC/$TOPDIR"
 if [[ ! -d "$SRC_DIR" ]]; then
-  echo "ERROR: srt source directory not found after extracting $TARBALL (expected $SRC_DIR)" >&2
+  echo "ERROR: dav1d source directory not found after extracting $TARBALL (expected $SRC_DIR)" >&2
   exit 1
 fi
-BUILD_DIR="$SRC_DIR/build-ffmpeg-builder"
+
+BUILD_DIR="$SRC_DIR/build-meson"
 rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
 
-# Configure and build SRT
-cmake -G Ninja \
-  -DCMAKE_INSTALL_PREFIX="$PREFIX" \
-  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-  -DENABLE_SHARED=OFF \
-  -DENABLE_STATIC=ON \
-  -DENABLE_APPS=OFF \
-  ..
+# enable_tools builds the dav1d CLI, which the FFmpeg link does not use.
+meson setup "$BUILD_DIR" "$SRC_DIR" \
+  --prefix "$PREFIX" \
+  --libdir lib \
+  --buildtype release \
+  --default-library static \
+  -Denable_tools=false \
+  -Denable_tests=false
 
-ninja -j"$PAR"
-ninja install
+ninja -C "$BUILD_DIR" -j"$PAR"
+ninja -C "$BUILD_DIR" install
