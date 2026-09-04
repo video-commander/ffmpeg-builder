@@ -49,10 +49,17 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # Configure, build, and install harfbuzz
+#
+# HB_HAVE_FREETYPE defaults to OFF, and hb-ft.h — the FreeType interop header —
+# is only installed when it is ON. FFmpeg's drawtext filter includes it, so
+# without this the FFmpeg build fails at vf_drawtext.c. CMAKE_PREFIX_PATH points
+# FindFreetype at the freetype we built into PREFIX rather than any system copy.
 cmake -G Ninja \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+  -DCMAKE_PREFIX_PATH="$PREFIX" \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DBUILD_SHARED_LIBS=OFF \
+  -DHB_HAVE_FREETYPE=ON \
   -DHB_BUILD_UTILS=OFF \
   -DHB_BUILD_TESTS=OFF \
   ..
