@@ -50,11 +50,17 @@ cd "$SRC_DIR"
 
 # --disable-frontend drops the lame CLI, which pulls in libsndfile and termcap.
 # FFmpeg links libmp3lame only.
+#
+# --disable-decoder: LAME 4.0 replaced the bundled mpglib decoder with libmpg123
+# and requires it unless the decoder is excluded. FFmpeg uses libmp3lame for
+# encoding only, so dropping it avoids an extra dependency rather than losing
+# anything.
 ./configure \
   --prefix="$PREFIX" \
   --enable-static \
   --disable-shared \
   --disable-frontend \
+  --disable-decoder \
   --disable-gtktest \
   --with-pic
 
