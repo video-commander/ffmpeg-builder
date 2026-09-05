@@ -131,6 +131,8 @@ CONFIG_FLAGS=(
   "--disable-libxcb-xfixes"
   "--disable-libxcb-shape"
   "--disable-sdl2"
+  # Autodetected otherwise, adding a host library the target may not have.
+  "--disable-lzma"
   "--enable-openssl"
 )
 [[ "$ENABLE_NONFREE" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-nonfree)
@@ -172,6 +174,8 @@ cp -av "$PREFIX/bin/ffprobe" "$OUT_DIR/bin/" || true
 # Licenses & models
 collect_licenses "$PREFIX" "$OUT_DIR/LICENSES"
 [[ -d "$PREFIX/share/model" ]] && cp -av "$PREFIX/share/model" "$OUT_DIR/share/" || true
+
+check_portable_linkage "$OUT_DIR/bin"
 
 make_manifest "$OUT_DIR"
 log "Build complete: $OUT_DIR"

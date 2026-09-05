@@ -126,6 +126,50 @@ collect_licenses() {
 }
 
 # -------------------------------------------------------------
+# Portability guard
+# -------------------------------------------------------------
+# Fails if a shipped binary links anything the target machine won't have.
+#
+# check_portable_linkage <bindir>
+# -------------------------------------------------------------
+
+check_portable_linkage() {
+  local bindir="$1"
+  local bad=0 f deps
+
+  for f in "$bindir"/*; do
+    [[ -f "$f" && -x "$f" ]] || continue
+
+    case "$(uname -s)" in
+      Darwin)
+        deps=$(otool -L "$f" 2>/dev/null | tail -n +2 | awk '{print $1}' \
+               | grep -vE '^(/System/|/usr/lib/)' || true)
+        ;;
+      Linux)
+        # Skip the loader and vDSO, which ldd prints without a path.
+        deps=$(ldd "$f" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i ~ /^\//) {print $i; break}}' \
+               | grep -vE '^(/lib/|/lib64/|/usr/lib/|/usr/lib64/)' || true)
+        ;;
+      *)
+        return 0
+        ;;
+    esac
+
+    if [[ -n "$deps" ]]; then
+      warn "non-portable linkage in $(basename "$f"):"
+      printf '  %s\n' $deps >&2
+      bad=1
+    fi
+  done
+
+  if [[ $bad -ne 0 ]]; then
+    err "shipped binaries depend on libraries outside the OS. Build them as static ports, or disable the feature in CONFIG_FLAGS."
+  fi
+
+  log "Linkage check passed: binaries depend only on OS libraries"
+}
+
+# -------------------------------------------------------------
 # Build manifest
 # -------------------------------------------------------------
 # make_manifest <outdir>
