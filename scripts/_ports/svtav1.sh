@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/util.sh"
+
 SRC="$1"
 PREFIX="$2"
 PAR="$3"
@@ -29,3 +31,5 @@ cmake -G Ninja \
 
 ninja -j"$PAR"
 ninja install
+
+install_license "$PREFIX" "svt-av1" "$SRC_DIR"

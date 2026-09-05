@@ -68,3 +68,5 @@ fi
 
 make -j"$PAR"
 make install
+
+install_license "$PREFIX" "opus" "$SRC_DIR"

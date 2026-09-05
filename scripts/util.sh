@@ -95,34 +95,73 @@ fetch_src() {
 
 
 # -------------------------------------------------------------
+# License staging
+# -------------------------------------------------------------
+# Copies a port's license text into the prefix, under its own name.
+# Extra paths are relative to srcdir, for projects whose top-level file
+# refers out to another one.
+#
+# install_license <prefix> <name> <srcdir> [extra...]
+# -------------------------------------------------------------
+
+install_license() {
+  local prefix="$1" name="$2" srcdir="$3"
+  shift 3
+  local dest="$prefix/share/licenses/$name"
+  local found=0 f
+
+  [[ -d "$srcdir" ]] || err "$name: source directory not found: $srcdir"
+  mkdir -p "$dest"
+
+  while IFS= read -r f; do
+    [[ -n "$f" ]] || continue
+    cp -f "$f" "$dest/"
+    found=1
+  done < <(find "$srcdir" -maxdepth 1 -type f \
+             \( -iname 'COPYING*' -o -iname 'LICENSE*' -o -iname 'LICENCE*' \
+                -o -iname 'NOTICE*' -o -iname 'PATENTS*' \) 2>/dev/null)
+
+  for f in "$@"; do
+    if [[ -f "$srcdir/$f" ]]; then
+      cp -f "$srcdir/$f" "$dest/"
+      found=1
+    else
+      warn "$name: expected license file missing: $f"
+    fi
+  done
+
+  [[ $found -eq 1 ]] || err "$name: no license text found in $srcdir"
+}
+
+# -------------------------------------------------------------
 # License collector
 # -------------------------------------------------------------
-# Copies all COPY* / LICENSE* files from prefix into out/LICENSES/
+# Copies the staged licenses into out/, and fails if an expected one
+# is absent.
 #
-# collect_licenses <prefix> <output>
+# collect_licenses <prefix> <output> [expected name...]
 # -------------------------------------------------------------
 
 collect_licenses() {
-  local prefix="$1"
-  local out="$2"
+  local prefix="$1" out="$2"
+  shift 2
+  local staged="$prefix/share/licenses"
+  local missing=() name
+
+  [[ -d "$staged" ]] || err "no licenses staged under $staged"
 
   mkdir -p "$out"
+  cp -R "$staged/." "$out/"
 
-  # Copy up to depth 4 inside prefix (matches ports layout)
-  local files
-  files=$(find "$prefix" \
-    -maxdepth 4 \
-    -type f \( -iname 'COPYING*' -o -iname 'LICENSE*' \) \
-    2>/dev/null || true)
+  for name in "$@"; do
+    [[ -d "$out/$name" ]] || missing+=("$name")
+  done
 
-  if [[ -z "$files" ]]; then
-    warn "No license files found under $prefix"
-    return 0
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    err "linked libraries with no license text: ${missing[*]}"
   fi
 
-  for f in $files; do
-    cp -v "$f" "$out/" || warn "Failed to copy license $f"
-  done
+  log "Licenses collected: $(find "$out" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') components"
 }
 
 # -------------------------------------------------------------

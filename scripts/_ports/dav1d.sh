@@ -58,3 +58,5 @@ meson setup "$BUILD_DIR" "$SRC_DIR" \
 
 ninja -C "$BUILD_DIR" -j"$PAR"
 ninja -C "$BUILD_DIR" install
+
+install_license "$PREFIX" "dav1d" "$SRC_DIR"

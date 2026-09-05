@@ -66,3 +66,5 @@ cmake -G Ninja \
 
 ninja -j"$PAR"
 ninja install
+
+install_license "$PREFIX" "harfbuzz" "$SRC_DIR"

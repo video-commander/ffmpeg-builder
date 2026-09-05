@@ -159,8 +159,9 @@ CONFIG_FLAGS=(
 ENABLE_FFPLAY=${ENABLE_FFPLAY:-$(yq '.ffmpeg.enable_ffplay' "$PROFILE_FILE")}
 [[ "$ENABLE_FFPLAY" =~ ^(true|1)$ ]] && CONFIG_FLAGS+=(--enable-ffplay) || CONFIG_FLAGS+=(--disable-ffplay)
 
+CONFIGURE_FLAGS_TXT="$PWD/../../configure-flags.txt"
 log "Configure flags:
-${CONFIG_FLAGS[*]}" | tee "$PWD/../../configure-flags.txt"
+${CONFIG_FLAGS[*]}" | tee "$CONFIGURE_FLAGS_TXT"
 ./configure "${CONFIG_FLAGS[@]}"
 make -j"$PARALLEL"
 make install
@@ -172,7 +173,26 @@ cp -av "$PREFIX/bin/ffprobe" "$OUT_DIR/bin/" || true
 [[ -f "$PREFIX/bin/ffplay" ]] && cp -av "$PREFIX/bin/ffplay" "$OUT_DIR/bin/"
 
 # Licenses & models
-collect_licenses "$PREFIX" "$OUT_DIR/LICENSES"
+install_license "$PREFIX" "ffmpeg" "$PWD"
+
+# The archive is a GPL binary: every library linked into it must ship its text.
+EXPECTED_LICENSES=(ffmpeg openssl)
+[[ "$ENABLE_X264"    =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(x264)
+[[ "$ENABLE_X265"    =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(x265)
+[[ "$ENABLE_AOM"     =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(libaom)
+[[ "$ENABLE_SVTAV1"  =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(svt-av1)
+[[ "$ENABLE_VPX"     =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(libvpx)
+[[ "$ENABLE_DAV1D"   =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(dav1d)
+[[ "$ENABLE_OPUS"    =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(opus)
+[[ "$ENABLE_LAME"    =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(lame)
+[[ "$ENABLE_FDK_AAC" =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(fdk-aac)
+[[ "$ENABLE_ASS"     =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(libass freetype fribidi harfbuzz)
+[[ "$ENABLE_ZIMG"    =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(zimg)
+[[ "$ENABLE_VMAF"    =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(libvmaf)
+[[ "$ENABLE_SRT"     =~ ^(true|1)$ ]] && EXPECTED_LICENSES+=(libsrt)
+
+collect_licenses "$PREFIX" "$OUT_DIR/LICENSES" "${EXPECTED_LICENSES[@]}"
+cp -f "$CONFIGURE_FLAGS_TXT" "$OUT_DIR/configure-flags.txt"
 [[ -d "$PREFIX/share/model" ]] && cp -av "$PREFIX/share/model" "$OUT_DIR/share/" || true
 
 check_portable_linkage "$OUT_DIR/bin"

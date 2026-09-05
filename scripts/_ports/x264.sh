@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/util.sh"
+
 SRC="$1"
 PREFIX="$2"
 PAR="$3"
@@ -39,3 +41,5 @@ fi
 
 make -j"$PAR"
 make install
+
+install_license "$PREFIX" "x264" "$SRC_DIR"

@@ -63,3 +63,5 @@ cmake -G Ninja \
 
 ninja -j"$PAR"
 ninja install
+
+install_license "$PREFIX" "libsrt" "$SRC_DIR"

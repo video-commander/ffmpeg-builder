@@ -46,3 +46,5 @@ cd "$SRC/$TOPDIR"
 
 make -j"$PAR"
 make install_sw
+
+install_license "$PREFIX" "openssl" "$SRC/$TOPDIR"
