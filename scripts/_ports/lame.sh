@@ -66,3 +66,5 @@ cd "$SRC_DIR"
 
 make -j"$PAR"
 make install
+
+install_license "$PREFIX" "lame" "$SRC_DIR"

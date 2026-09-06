@@ -73,3 +73,5 @@ cmake -G Ninja \
 
 ninja -j"$PAR"
 ninja install
+
+install_license "$PREFIX" "freetype" "$SRC_DIR" "docs/FTL.TXT" "docs/GPLv2.TXT"

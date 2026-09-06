@@ -61,3 +61,5 @@ PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:${PKG_CONFIG_PATH:-}" \
 
 make -j"$PAR"
 make install
+
+install_license "$PREFIX" "libass" "$SRC_DIR"

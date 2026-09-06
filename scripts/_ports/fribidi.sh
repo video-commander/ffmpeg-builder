@@ -69,3 +69,5 @@ meson setup "$BUILD_DIR" "$SRC_DIR" \
 
 ninja -C "$BUILD_DIR" -j"$PAR"
 ninja -C "$BUILD_DIR" install
+
+install_license "$PREFIX" "fribidi" "$SRC_DIR"

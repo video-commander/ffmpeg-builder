@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/util.sh"
+
 SRC="$1"
 PREFIX="$2"
 PAR="$3"
@@ -30,3 +32,5 @@ cd "$SRC_DIR"
 
 make -j"$PAR"
 make install
+
+install_license "$PREFIX" "zimg" "$SRC_DIR"

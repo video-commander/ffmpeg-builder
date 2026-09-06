@@ -91,3 +91,5 @@ Version: ${VMAF_VERSION_NO_V}
 Libs: -L\${libdir} -lvmaf -lm ${CXX_LIB}
 Cflags: -I\${includedir} -I\${includedir}/libvmaf
 PC
+
+install_license "$PREFIX" "libvmaf" "$SRC_DIR"

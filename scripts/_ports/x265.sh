@@ -116,3 +116,5 @@ Version: ${X265_VERSION}
 Libs: -L\${libdir} -lx265 -lm -lpthread ${CXX_LIB}
 Cflags: -I\${includedir}
 PC
+
+install_license "$PREFIX" "x265" "$SRC_DIR"

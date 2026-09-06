@@ -76,3 +76,5 @@ fi
 
 make -j"$PAR"
 make install
+
+install_license "$PREFIX" "libvpx" "$SRC_DIR"
