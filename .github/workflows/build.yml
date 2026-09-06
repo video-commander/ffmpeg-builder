@@ -254,3 +254,30 @@ jobs:
             dist/**/**.zip
             dist/**/**.zip.sha256
           generate_release_notes: true
+
+      # Skipped when the token is absent, so a release still succeeds without it.
+      - name: Check for tap token
+        id: tap
+        run: echo "enabled=${{ secrets.HOMEBREW_TAP_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out tap
+        if: steps.tap.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: video-commander/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Point the formula at this release
+        if: steps.tap.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          ./scripts/update-tap-formula.sh \
+            "${GITHUB_REF_NAME}" ./dist tap/Formula/ffmpeg-vc.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/ffmpeg-vc.rb
+          git diff --cached --quiet && exit 0
+          git commit -m "ffmpeg-vc ${GITHUB_REF_NAME#v}"
+          git push
