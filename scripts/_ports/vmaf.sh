@@ -58,12 +58,15 @@ fi
 BUILD_DIR="$LIBVMAF_SRC/build-ffmpeg-builder"
 rm -rf "$BUILD_DIR"
 
-# Configure, build, and install libvmaf
+# Configure, build, and install libvmaf.
+# enable_float registers the speed_chroma/speed_temporal extractors for 
+# VMAF v1 models (vmaf_v1.0.16_*)
 meson setup "$BUILD_DIR" "$LIBVMAF_SRC" \
   --prefix "$PREFIX" \
   --libdir lib \
   --buildtype release \
-  --default-library=static
+  --default-library=static \
+  -Denable_float=true
 
 ninja -C "$BUILD_DIR" -j"$PAR"
 ninja -C "$BUILD_DIR" install
