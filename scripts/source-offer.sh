@@ -61,6 +61,10 @@ fetched from the upstream URL below at the pinned version:
 | --- | --- | --- | --- |
 $(printf '%s\n' "${rows[@]}")
 
+libvmaf is the upstream release with the patches in
+\`scripts/_ports/patches/vmaf/\` applied; each patch names the upstream commit
+it backports.
+
 Full license texts for every linked library are included in each archive under
 \`LICENSES/\`, and the exact configure line is in \`configure-flags.txt\`.
 
