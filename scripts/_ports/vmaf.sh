@@ -48,6 +48,21 @@ if [[ ! -d "$SRC_DIR" ]]; then
   echo "ERROR: vmaf source directory not found after extracting $TARBALL (expected $SRC_DIR)" >&2
   exit 1
 fi
+
+# Upstream fixes not yet in a libvmaf release, applied in filename order. A
+# patch that already reverses cleanly is skipped, so a cached source tree is
+# patched once. Each patch names the upstream commit it backports.
+PATCH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/patches/vmaf"
+for p in "$PATCH_DIR"/*.patch; do
+  [[ -e "$p" ]] || continue
+  if patch -d "$SRC_DIR" -p1 -R -s -f --dry-run < "$p" >/dev/null 2>&1; then
+    echo "vmaf: $(basename "$p") already applied"
+  else
+    patch -d "$SRC_DIR" -p1 -s -N < "$p"
+    echo "vmaf: applied $(basename "$p")"
+  fi
+done
+
 LIBVMAF_SRC="$SRC_DIR/libvmaf"
 
 if [[ ! -d "$LIBVMAF_SRC" ]]; then
