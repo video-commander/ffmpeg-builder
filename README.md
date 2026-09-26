@@ -8,7 +8,7 @@ A cross‑platform CI project that builds **portable FFmpeg binaries** (and opti
 
 Supports popular codecs via source builds by default:
 
-- **x264**, **x265**, **SVT‑AV1**, **AOM‑AV1**, **dav1d** (AV1 decode), **libvpx** (VP8/VP9)
+- **x264**, **x265** (8-, 10- and 12-bit in one library), **SVT‑AV1**, **AOM‑AV1**, **dav1d** (AV1 decode), **libvpx** (VP8/VP9)
 - **Opus**, **LAME** (MP3), **fdk‑aac** (nonfree, opt‑in)
 - **zimg** (zscale: colour space, transfer, tone mapping), **libvmaf**, **libass** + **drawtext**, **libsrt**
 - Easily extendable (OpenH264, libvmaf, libass, etc.)

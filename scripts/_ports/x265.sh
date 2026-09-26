@@ -45,7 +45,6 @@ else
   exit 1
 fi
 
-BUILD_DIR="$SRC_DIR/build"
 CML="$SRC_DIR/source/CMakeLists.txt"
 
 # Patch CMakeLists.txt to remove old CMake policy settings
@@ -71,10 +70,6 @@ if [[ -f "$CML" ]] && ! grep -q "VC_PATCHED_FOR_MODERN_CMAKE" "$CML"; then
   fi
 fi
 
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
-
 # Configure extra flags for macOS (assembly causes linker issues with Xcode 26+)
 EXTRA_X265_FLAGS=()
 if [[ "$(uname -s)" == "Darwin" ]]; then
@@ -82,17 +77,60 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   [[ "$(uname -m)" == "arm64" ]] && EXTRA_X265_FLAGS+=(-DENABLE_NEON=OFF)
 fi
 
-# Configure and build
-cmake -G Ninja \
-  -DCMAKE_INSTALL_PREFIX="$PREFIX" \
-  -DENABLE_SHARED=OFF \
-  -DENABLE_CLI=OFF \
-  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-  ${EXTRA_X265_FLAGS[@]+"${EXTRA_X265_FLAGS[@]}"} \
-  ../source
+COMMON_FLAGS=(
+  -G Ninja
+  -DENABLE_SHARED=OFF
+  -DENABLE_CLI=OFF
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+  ${EXTRA_X265_FLAGS[@]+"${EXTRA_X265_FLAGS[@]}"}
+)
 
+# Multilib: the 10- and 12-bit builds are linked into the 8-bit one, so one
+# libx265.a encodes all three depths and FFmpeg's libx265 offers the 10/12-bit
+# pixel formats. An 8-bit-only libx265 silently downconverts 10-bit input.
+# Same layout as x265's own build/linux/multilib.sh.
+build_depth() {
+  local dir="$1"; shift
+  rm -rf "$dir"
+  mkdir -p "$dir"
+  (cd "$dir" && cmake "${COMMON_FLAGS[@]}" "$@" ../source && ninja -j"$PAR")
+}
+
+build_depth "$SRC_DIR/build-12bit" -DHIGH_BIT_DEPTH=ON -DMAIN12=ON -DEXPORT_C_API=OFF
+build_depth "$SRC_DIR/build-10bit" -DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF
+
+BUILD_DIR="$SRC_DIR/build-8bit"
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
+cp "$SRC_DIR/build-10bit/libx265.a" "$BUILD_DIR/libx265_main10.a"
+cp "$SRC_DIR/build-12bit/libx265.a" "$BUILD_DIR/libx265_main12.a"
+cd "$BUILD_DIR"
+cmake "${COMMON_FLAGS[@]}" \
+  -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+  -DEXTRA_LIB="x265_main10.a;x265_main12.a" \
+  -DEXTRA_LINK_FLAGS=-L. \
+  -DLINKED_10BIT=ON \
+  -DLINKED_12BIT=ON \
+  ../source
 ninja -j"$PAR"
+
 ninja install
+
+# Merge the three depths into the one archive FFmpeg links, replacing the
+# 8-bit-only libx265.a that `ninja install` put in the prefix.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  libtool -static -o libx265_multilib.a libx265.a libx265_main10.a libx265_main12.a
+else
+  ar -M <<MRI
+CREATE libx265_multilib.a
+ADDLIB libx265.a
+ADDLIB libx265_main10.a
+ADDLIB libx265_main12.a
+SAVE
+END
+MRI
+fi
+cp libx265_multilib.a "$PREFIX/lib/libx265.a"
 
 # Create pkg-config file
 PC_DIR="$PREFIX/lib/pkgconfig"

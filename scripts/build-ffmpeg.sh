@@ -197,5 +197,12 @@ cp -f "$CONFIGURE_FLAGS_TXT" "$OUT_DIR/configure-flags.txt"
 
 check_portable_linkage "$OUT_DIR/bin"
 
+# A single-depth libx265 links and runs, but silently encodes 10-bit input as 8-bit.
+if [[ "$ENABLE_X265" =~ ^(true|1)$ ]] && \
+   ! "$OUT_DIR/bin/ffmpeg" -hide_banner -h encoder=libx265 | grep -q 'yuv420p10le'; then
+  echo "ERROR: libx265 lacks 10-bit support; the multilib x265 build did not link" >&2
+  exit 1
+fi
+
 make_manifest "$OUT_DIR"
 log "Build complete: $OUT_DIR"
